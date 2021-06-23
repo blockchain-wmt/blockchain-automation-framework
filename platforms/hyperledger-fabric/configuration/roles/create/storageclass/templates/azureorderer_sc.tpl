@@ -8,3 +8,4 @@ allowVolumeExpansion: true
 parameters:
   storageaccounttype: Premium_LRS
   kind: Managed
+volumeBindingMode: WaitForFirstConsumer
