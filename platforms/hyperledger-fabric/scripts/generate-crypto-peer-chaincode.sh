@@ -83,5 +83,4 @@ else # If User certificate exists
 	fi
 fi
 
-done
 cd ${CURRENT_DIR}

@@ -41,6 +41,7 @@ spec:
       sequence: {{ component_chaincode.sequence | default('1') }}
       commitarguments: {{ component_chaincode.arguments | quote}}
       endorsementpolicies:  {{ component_chaincode.endorsements | quote }}
+{% if component_chaincode.repository is defined %}
       repository:
         hostname: "{{ component_chaincode.repository.url.split('/')[0] | lower }}"
         git_username: "{{ component_chaincode.repository.username}}"
@@ -51,6 +52,7 @@ spec:
         collectionsconfig:  {{ component_chaincode.repository.collections_config }} 
 {% else %}
         collectionsconfig:  ''
+{% endif %}
 {% endif %}
     channel:
       name: {{ item.channel_name | lower }}

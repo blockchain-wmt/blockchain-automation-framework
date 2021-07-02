@@ -6,6 +6,8 @@ fi
 
 set -x
 
+CURRENT_DIR=${PWD}
+
 # Input parameters
 FULLY_QUALIFIED_ORG_NAME=$2
 ORG_NAME=$3

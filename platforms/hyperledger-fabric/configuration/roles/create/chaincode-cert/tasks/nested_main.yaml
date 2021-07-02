@@ -20,8 +20,12 @@
 # This task changes the permission for scripts
 - name: Changing the permission of msp files
   file:  
-    path: ./build/{{ files }} 
+    path: ./build/{{ files }}
+    mode: '0775'
+  with_items:
+    - generate-crypto-chaincode-server.sh 
   loop_control:
+    loop_var: files
   when: setup_user_env is not defined or setup_user_env == true
 
 ############################################################################################

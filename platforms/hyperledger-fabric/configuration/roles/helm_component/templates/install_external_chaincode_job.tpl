@@ -28,7 +28,7 @@ spec:
     vault:
       role: vault-role
       address: {{ vault.url }}
-      authpath: {{ namespace | e }}-auth
+      authpath: {{ network.env.type }}{{ namespace | e }}-auth
       chaincodesecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/peers/{{ peer_name }}.{{ namespace }}/chaincode
       adminsecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/users/admin 
       orderersecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/orderer
