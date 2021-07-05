@@ -22,6 +22,7 @@
         kubernetes: "{{ item.k8s }}"
         components: "{{ item.components }}"
       loop: "{{ network['organizations'] }}"
+      when: item.components is defined
 
   vars: #These variables can be overriden from the command line
     privilege_escalate: false           #Default to NOT escalate to root privledges

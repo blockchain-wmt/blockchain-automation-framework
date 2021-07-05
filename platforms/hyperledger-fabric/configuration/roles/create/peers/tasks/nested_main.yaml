@@ -8,12 +8,12 @@
 # Copy custom core.yaml for peer
 - name: Copy custom config for fabric-ca server
   shell: |
-    rm -f {{ values_dir }}/{{ item.name | lower }}/values-{{ peer.name }}.yaml
+    cp {{ peer.core_yaml.configpath }} ../../../{{ charts_dir }}/peernode/conf/{{ peer.name }}_{{ item.name | lower }}_core.yaml
   when: 
     - peer.core_yaml is defined
     - peer.core_yaml.initialize_from == 'file'
     - peer.core_yaml.configpath is defined
-    - peer.core_yaml.tpl == True
+    - peer.core_yaml.tpl == true
 
 ############################################################################################
 # This task fetches the custom core.yaml
@@ -24,7 +24,7 @@
     - peer.core_yaml is defined
     - peer.core_yaml.initialize_from == 'file'
     - peer.core_yaml.configpath is defined
-    - peer.core_yaml.tpl == False
+    - peer.core_yaml.tpl == false
 
 ###########################################################################################
 # This task writes the couchdb credentials for each organization to the vault

@@ -92,6 +92,7 @@
       include_role:
         name: "create/chaincode/install-external"
       vars:
+        envspace: "{{ network.env.type }}"
         docker_url: "{{ network.docker.url }}"
         name: "{{ item.name | lower}}"
         namespace: "{{ item.name | lower}}-net"
@@ -102,7 +103,7 @@
         kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
         peers: "{{ item.services.peers }}"
-        git_url: "{{ item.gitops.git_ssh }}"
+        git_url: "{{ item.gitops.git_url }}"
         git_branch: "{{ item.gitops.branch }}"
         docker_url: "{{ network.docker.url }}"
         charts_dir: "{{ item.gitops.chart_source }}"
@@ -149,7 +150,7 @@
         kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
         peers: "{{ item.services.peers }}"
-        git_url: "{{ item.gitops.git_ssh }}"
+        git_url: "{{ item.gitops.git_url }}"
         git_branch: "{{ item.gitops.branch }}"
         docker_url: "{{ network.docker.url }}"
         charts_dir: "{{ item.gitops.chart_source }}"

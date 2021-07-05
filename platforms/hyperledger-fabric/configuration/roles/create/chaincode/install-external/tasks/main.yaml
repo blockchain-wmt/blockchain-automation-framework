@@ -5,6 +5,7 @@
   vars:
     chaincode_name: "{{ peer.chaincode.name | lower }}"
     chaincode_version: "{{ peer.chaincode.version }}"
+    envspace: "{{ envspace }}"
   loop: "{{ peers }}"
   loop_control:
     loop_var: peer

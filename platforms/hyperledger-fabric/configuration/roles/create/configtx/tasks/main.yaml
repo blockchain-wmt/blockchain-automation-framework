@@ -46,12 +46,10 @@
     block: "{{ lookup('template', filename) }}"
     marker: "#"
   vars:
-    consensus: "{{ item.services.consensus }}"
+    consensus: "{{ org.services.consensus }}"
     org_query: "organizations[?type=='orderer']"
     org: "{{ network | json_query(org_query) | first }}"
     filename: configtxinit_{{ 'custom' if network.configtx is defined and network.configtx.custom == true and cfinit.stat.exists else 'default' }}.tpl
-  loop: "{{ network['organizations'] }}"
-  when: item.type == 'orderer'
   tags:
     - molecule-idempotence-notest
 
@@ -69,7 +67,7 @@
     component_name: "{{ item.name }}"
     component_ns: "{{ item.name | lower }}-net"
     component_type: "{{ item.type | lower }}"
-    provider: "{{ item.cloud_provider }}"
+    provider: "{{ network.env.proxy }}"
     filename: configtxOrg_{{ 'custom' if network.configtx is defined and network.configtx.custom == true and cforg.stat.exists else 'default' }}.tpl
   loop: "{{ network['organizations'] }}"
   tags:
@@ -89,7 +87,7 @@
     orderers: "{{ item.services.orderers }}"
     consensus: "{{ item.services.consensus }}"
     component_ns: "{{ item.name | lower }}-net"
-    provider: "{{ item.cloud_provider }}"
+    provider: "{{ network.env.proxy }}"
     filename: configtxOrderer_{{ 'custom' if network.configtx is defined and network.configtx.custom == true and cford.stat.exists else 'default' }}.tpl
   loop: "{{ network['organizations'] }}"
   when: item.type == 'orderer'
