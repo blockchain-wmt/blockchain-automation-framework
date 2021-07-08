@@ -113,7 +113,7 @@
         kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
         peers: "{{ item.services.peers }}"
-        git_url: "{{ item.gitops.git_ssh }}"
+        git_url: "{{ item.gitops.git_url }}"
         git_branch: "{{ item.gitops.branch }}"
         docker_url: "{{ network.docker.url }}"
         charts_dir: "{{ item.gitops.chart_source }}"

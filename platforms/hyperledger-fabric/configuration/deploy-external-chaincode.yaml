@@ -1,9 +1,9 @@
-# This playbook deploys a DLT network on existing Kubernetes clusters
-# The Kubernetes clusters should already be created and the infomation to connect to the
-#  clusters be updated in the network.yaml file that is used as an input to this playbook
+# This playbook executes required tasks to commit chaincode 
+# on existing Kubernetes clusters. The Kubernetes clusters should already be created and the infomation 
+# to connect to the clusters be updated in the network.yaml file that is used as an input to this playbook
 ###########################################################################################
 # To Run this playbook from this directory, use the following command (network.yaml also in this directory)
-#  ansible-playbook deploy-network.yaml -e "@./network.yaml"
+#  ansible-playbook platforms/hyperledger-fabric/configuration/commit-chaincode.yaml -e "@./network.yaml"
 ############################################################################################
 # Please ensure that the ../../shared/configuration playbooks have been run using the same network.yaml
 ---
@@ -12,24 +12,28 @@
   gather_facts: no
   tasks:
 
-    # This role updated the core.yaml for peers of organisations
-    - name: update all peers
+    ############################################################################################
+    # This task deploys the external chaincode server for desired org
+    - name: Deploy external chaincode server
       include_role:
-        name: "create/peers"
+        name: "create/external_chaincode"
       vars:
-        build_path: "./build"
+        docker_url: "{{ network.docker.url }}"
+        name: "{{ item.name | lower}}"
         namespace: "{{ item.name | lower}}-net"
         component_type: "{{ item.type | lower}}"
-        component_services: "{{ item.services }}"
+        component_peers: "{{ item.services.peers }}"
+        org_name: "{{ item.name | lower }}"
+        org_ns: "{{ item.name | lower }}-net"
+        kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
+        peers: "{{ item.services.peers }}"
         git_url: "{{ item.gitops.git_url }}"
         git_branch: "{{ item.gitops.branch }}"
-        docker_url: "{{ network.docker.url }}"
         charts_dir: "{{ item.gitops.chart_source }}"
         values_dir: "{{playbook_dir}}/../../../{{item.gitops.release_dir}}/{{ item.name | lower }}"
-        update_core_yaml: true
       loop: "{{ network['organizations'] }}"
-      when: item.type == 'peer'
+      when: item.type == 'peer' and item.org_status == 'new'
 
   vars: #These variables can be overriden from the command line
     privilege_escalate: false           #Default to NOT escalate to root privledges
@@ -37,3 +41,4 @@
     install_arch:  "amd64"              #Default to amd64 architecture
     bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries
     add_new_org: 'false'                # Default to false as this is for main network creation
+    external_chaincode: false                # Default to false 

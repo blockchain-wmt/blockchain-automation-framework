@@ -1,0 +1,11 @@
+#############################################################################################
+# This role generates crypto material for users.
+#############################################################################################
+############################################################################################
+# Copy certificates to vault
+- name: Copy certificates to vault
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/chaincode ca.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.name}}-chaincode@{{ component_name }}/tls/ca.crt)" client.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.name}}-chaincode@{{ component_name }}/tls/client.crt)" client.key="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.name}}-chaincode@{{ component_name }}/tls/client.key)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"

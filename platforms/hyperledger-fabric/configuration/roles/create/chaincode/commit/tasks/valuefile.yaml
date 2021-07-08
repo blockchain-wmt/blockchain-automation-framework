@@ -2,20 +2,6 @@
 ############################################################################################
 # This role creates the commit_chaincode value file
 
-# Check or Wait if approve-chaincode is already run
-- name: "Waiting for chaincode to be approve on {{ peer.name }}"
-  include_role:
-    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
-  vars:
-    component_type: "Job"
-    namespace: "{{ org.name |lower }}-net"
-    kubernetes: "{{ org.k8s }}"
-    component_name: "approvechaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
-  loop: "{{ org.services.peers }}"
-  loop_control:
-    loop_var: peer
-  when: peer.chaincode is defined
-
 # Check if commit-chaincode is already run
 - name: 'Check for commit-chaincode job'  
   include_role:
@@ -45,7 +31,7 @@
     loop_var: organization
   when: organization.type == 'peer'
 
-# Nested task for chaincode commit
+# Nested task for chaincode commit on the commit peer only
 - name: "Create value file for chaincode commit"
   include_role:
     name: helm_component
@@ -67,7 +53,9 @@
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer
-  when: peer.chaincode is defined and commit_chaincode.resources|length == 0
+  when: 
+    - peer.chaincode is defined and commit_chaincode.resources|length == 0
+    - peer.name == commit_peer_name
 
 #Git Push : Pushes the above generated files to git directory 
 - name: Git Push

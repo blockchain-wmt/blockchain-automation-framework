@@ -36,6 +36,7 @@ spec:
       imagesecretname: regcred
       secretgitprivatekey: {{ vault.secret_path | default('secret') }}/credentials/{{ namespace }}/git?git_password
       tls: false
+      chaincodepackageprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/chaincode/package/{{ component_chaincode.name | lower | e }}/v{{ component_chaincode.version }}
     chaincode:
       name: {{ component_chaincode.name | lower | e }}
       version: {{ component_chaincode.version }}

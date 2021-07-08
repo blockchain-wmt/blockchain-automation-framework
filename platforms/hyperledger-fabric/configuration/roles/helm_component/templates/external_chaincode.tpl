@@ -33,8 +33,8 @@ spec:
     vault:
       role: vault-role
       address: {{ vault.url }}
-      authpath: {{ namespace }}-auth
-      chaincodesecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/chaincode/{{ peer.chaincode.name }}
+      authpath: {{ network.env.type }}{{ namespace }}-auth
+      chaincodesecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/chaincode/{{ peer.chaincode.name }}/certificate/v{{ peer.chaincode.version }}
       serviceaccountname: vault-auth
       imagesecretname: regcred
 

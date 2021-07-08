@@ -13,7 +13,7 @@
     - peer.core_yaml is defined
     - peer.core_yaml.initialize_from == 'file'
     - peer.core_yaml.configpath is defined
-    - peer.core_yaml.tpl == true
+    # - peer.core_yaml.tpl == true
 
 ############################################################################################
 # This task fetches the custom core.yaml
@@ -58,7 +58,7 @@
     loop_var: peer 
   when: 
     - peer.peerstatus is not defined or peer.peerstatus == 'new' 
-    - update_core_yaml is undefined or update_core_yaml == false 
+    # - update_core_yaml is undefined or update_core_yaml == false
 
 #Git Push : Pushes the above generated files to git directory 
 - name: Git Push

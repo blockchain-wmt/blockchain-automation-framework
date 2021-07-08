@@ -179,7 +179,12 @@ spec:
 
             #chaincode path
             CC_SRC_PATH="github.com/chaincode/${CHAINCODE_NAME}/${CHAINCODE_MAINDIR}"
-            
+            echo "Sunsu: setting the dependencies start"
+            cd $GOPATH/src/$CC_SRC_PATH
+            echo "Sunsu: setting the dependencies"
+            GO111MODULE=on go mod vendor
+            cd $GOPATH/src/github.com/chaincode  
+            echo "Sunsu: setting the dependencies end"
           elif [ ${CC_RUNTIME_LANGUAGE} = "java" ]
           then
             ## Copying desired chaincode to a location 

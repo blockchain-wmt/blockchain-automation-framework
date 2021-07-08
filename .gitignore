@@ -36,3 +36,4 @@
 **/node_modules
 # custom config templates
 *_custom.tpl
+build

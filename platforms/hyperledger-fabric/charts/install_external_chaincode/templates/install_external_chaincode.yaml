@@ -37,6 +37,9 @@ spec:
       - name: certificates
         emptyDir:
           medium: Memory
+      - name: chaincodepackage
+        emptyDir:
+          medium: Memory
       initContainers:
       - name: certificates-init
         image: {{ $.Values.metadata.images.alpineutils }}
@@ -146,6 +149,70 @@ spec:
         {{ end }}
         - name: certificates
           mountPath: /secret
+
+      - name: package-init
+        image: {{ $.Values.metadata.images.alpineutils }}
+        imagePullPolicy: Always
+        env:
+        - name: VAULT_ADDR
+          value: {{ $.Values.vault.address }}
+        - name: KUBERNETES_AUTH_PATH
+          value: {{ $.Values.vault.authpath }}
+        - name: VAULT_APP_ROLE
+          value: {{ $.Values.vault.role }}
+        - name: VAULT_CHAINCODE_PACKAGE_PREFIX
+          value: {{ $.Values.vault.chaincodepackageprefix}}
+        - name: CHAINCODE_NAME
+          value: "{{ $.Values.chaincode.name }}"
+        - name: CHAINCODE_VERSION
+          value: "{{ $.Values.chaincode.version }}"
+        - name: CHAINCODE_MOUNT_PATH
+          value: /chaincodepackage
+        command: ["sh", "-c"]
+        args:
+        - |-
+          #!/usr/bin/env sh
+          ## load encoded package bytes from vault
+
+          validateVaultResponse () {
+          if echo ${2} | grep "errors"; then
+           echo "ERROR: unable to retrieve ${1}: ${2}"
+           exit 1
+           fi
+          }
+
+          KUBE_SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          echo "Getting secrets from Vault Server: ${VAULT_ADDR}"
+          # Login to Vault and so I can get an approle token
+          VAULT_CLIENT_TOKEN=$(curl -sS --request POST ${VAULT_ADDR}/v1/auth/${KUBERNETES_AUTH_PATH}/login \
+            -H "Content-Type: application/json" \
+            -d '{"role":"'"${VAULT_APP_ROLE}"'","jwt":"'"${KUBE_SA_TOKEN}"'"}' | \
+            jq -r 'if .errors then . else .auth.client_token end')
+          validateVaultResponse 'vault login token' "${VAULT_CLIENT_TOKEN}"
+
+          echo "Getting Package Base64 from Vault in ${VAULT_CHAINCODE_PACKAGE_PREFIX}"
+
+          LOOKUP_PACKAGE_BASE64_RESPONSE=$(curl -sS \
+            --header "X-Vault-Token: ${VAULT_CLIENT_TOKEN}" \
+            ${VAULT_ADDR}/v1/${VAULT_CHAINCODE_PACKAGE_PREFIX} | jq -r 'if .errors then . else . end')
+
+          validateVaultResponse "secret (${VAULT_CHAINCODE_PACKAGE_PREFIX})" "${LOOKUP_PACKAGE_BASE64_RESPONSE}"
+
+          PACKAGE_HASH=$(echo ${LOOKUP_PACKAGE_BASE64_RESPONSE} | jq -r '.data["package-base64"]')
+
+          PACKAGE_BASE64=$(echo ${LOOKUP_PACKAGE_BASE64_RESPONSE} | jq -r '.data["package-base64"]')
+
+          echo ${PACKAGE_BASE64} | base64 -d > ${CHAINCODE_MOUNT_PATH}/${CHAINCODE_NAME}_${CHAINCODE_VERSION}.tgz
+
+        volumeMounts:
+        {{ if .Values.vault.tls  }}
+        - name: vaultca
+          mountPath: "/etc/ssl/certs/"
+          readOnly: true
+        {{ end }}
+        - name: chaincodepackage
+          mountPath: /chaincodepackage
+          readOnly: false
       containers:
       - name: installextchaincode
         image: {{ $.Values.metadata.images.fabrictools }}
@@ -157,30 +224,8 @@ spec:
         - |-
           #!/bin/bash sh
           # tail -f /dev/null;
-          ## packaging chaincode
-          if [ "${CHAINCODE_TLS_DISABLED}" == "false" ]; then
-            CACERT=$(cat ${CHAINCODE_CERTS_PATH}/ca.crt);
-            CACERT=${CACERT//$'\n'/\\n};
-            CLIENT_CERT=$(cat ${CHAINCODE_CERTS_PATH}/client.crt);
-            CLIENT_CERT=${CLIENT_CERT//$'\n'/\\n};
-            CLIENT_KEY=$(cat ${CHAINCODE_CERTS_PATH}/client.key);
-            CLIENT_KEY=${CLIENT_KEY//$'\n'/\\n};
-            echo '{"address":"'${CHAINCODE_ADDR}'","dial_timeout":"10s","tls_required":true,"client_auth_required":true,"client_key":"'${CLIENT_KEY}'","client_cert":"'${CLIENT_CERT}'","root_cert":"'${CACERT}'"}' > connection.json;
-          fi
-          if [ "${CHAINCODE_TLS_DISABLED}" == "true" ]; then
-            echo '{"address":"'${CHAINCODE_ADDR}'","dial_timeout":"10s","tls_required":false,"client_auth_required":false,"client_key":"","client_cert":"","root_cert":""}' > connection.json;
-          fi
-
-          echo '{"path":"","type":"external","label":"'${CHAINCODE_NAME}_${CHAINCODE_VERSION}'"}' > metadata.json;
-
-          cat connection.json;
-          cat metadata.json;
-
-          tar cfz code.tar.gz connection.json;
-          tar cfz ${CHAINCODE_NAME}_${CHAINCODE_VERSION}.tgz code.tar.gz metadata.json
-
           ## Installing Chaincode
-          peer lifecycle chaincode install ${CHAINCODE_NAME}_${CHAINCODE_VERSION}.tgz
+          peer lifecycle chaincode install ${CHAINCODE_MOUNT_PATH}/${CHAINCODE_NAME}_${CHAINCODE_VERSION}.tgz
           echo "Chaincode installed for Fabric v.2.X"
           #query installed
           echo "peer query installed"
@@ -224,7 +269,12 @@ spec:
           value: "{{ $.Values.metadata.network.version }}"
         - name: CC_RUNTIME_LANGUAGE
           value: "{{ $.Values.chaincode.lang }}"
+        - name: CHAINCODE_MOUNT_PATH
+          value: /chaincodepackage
         volumeMounts:
         - name: certificates
           mountPath: /opt/gopath/src/github.com/hyperledger/fabric/crypto
+          readOnly: true
+        - name: chaincodepackage
+          mountPath: /chaincodepackage
           readOnly: true
