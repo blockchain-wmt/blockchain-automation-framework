@@ -84,6 +84,15 @@ spec:
     {{- if $.Values.service.ports.couchdb.nodeport }}
     nodePort: {{ $.Values.service.ports.couchdb.nodeport }}
     {{- end }}
+  {{- if $.Values.service.ports.metrics.enabled }}
+  - name: metrics
+    protocol: TCP
+    targetPort: 9443
+    port: {{ $.Values.service.ports.metrics.clusteripport }}
+    {{- if $.Values.service.ports.metrics.nodeport }}
+    nodePort: {{ $.Values.service.ports.metrics.nodeport }}
+    {{- end }}
+  {{- end }}
   {{- if (eq $.Values.service.servicetype "ClusterIP") }}
   clusterIP: None
   {{- end }}

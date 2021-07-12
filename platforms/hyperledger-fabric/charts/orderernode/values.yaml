@@ -72,7 +72,16 @@ service:
       #Provide a cluster IP port for orderer to be exposed.
       #Eg. clusteripport: 7050
       clusteripport: 7050
-
+    metrics:
+      #Information on whether the service is enabled or not
+      #Eg. enabled: true
+      enabled: false
+      #Provide a nodeport for metrics endpoint in the range of 30000-32767 (optional)
+      #Eg. nodeport: 30004
+      nodeport:
+      #Provide a cluster IP port for the metrics service to be exposed
+      #Eg. clusteripport: 9443
+      clusteripport: 9443
 
 
 vault:
