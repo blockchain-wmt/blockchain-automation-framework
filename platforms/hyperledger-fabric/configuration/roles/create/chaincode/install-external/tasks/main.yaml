@@ -23,11 +23,11 @@
 - name: Generation chaincode connection details with mTLS
   shell: |
     cd tmp/package/{{ org_ns }}
-    CACERT=$(cat ./ca.crt)
-    CLIENT_CERT=$(cat ./client.crt)
-    CLIENT_KEY=$(cat ./client.key)
-    CHAINCODE_ADDR=chaincode-{{ chaincode_name }}-{{ chaincode_version }}-{{ org_name }}.{{ org_ns }}.svc.cluster.local:7052
-    echo '{"address":"'${CHAINCODE_ADDR}'","dial_timeout":"10s","tls_required":true,"client_auth_required":true,"client_key":"'${CLIENT_KEY}'","client_cert":"'${CLIENT_CERT}'","root_cert":"'${CACERT}'"}' > connection.json;
+    echo '{}' | jq --arg cc_addr "chaincode-{{ chaincode_name }}-{{ chaincode_version }}-{{ org_name }}.{{ org_ns }}.svc.cluster.local:7052" \
+      --arg c_key "$(cat ./client.key)" \
+      --arg c_crt "$(cat ./client.crt)" \
+      --arg ca_crt "$(cat ./ca.crt)" \
+      '{"address": $cc_addr, "dial_timeout":"10s", "tls_required":true, "client_auth_required":true, "client_key":$c_key, "client_cert":$c_crt, "root_cert":$ca_crt}' > connection.json
     echo '{"path":"","type":"external","label":"'{{ package_name }}'"}' > metadata.json;
   vars:
     chaincode_name: "{{ peers[0].chaincode.name | lower }}"
