@@ -209,6 +209,10 @@ spec:
           containerPort: 7051
         - name: events
           containerPort: 7053
+        {{- if $.Values.service.ports.metrics.enabled }}
+        - name: metrics
+          containerPort: 9443
+        {{- end }}
         env:
         - name: INITIALIZE_FROM
           value: "{{ $.Values.peer.core_yaml.initialize_from }}"

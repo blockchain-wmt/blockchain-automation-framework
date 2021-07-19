@@ -229,6 +229,10 @@ spec:
           orderer
         ports:
         - containerPort: 7050
+        {{- if $.Values.service.ports.metrics.enabled }}
+        - name: metrics
+          containerPort: 9443
+        {{- end }}
         env:
         - name: INITIALIZE_FROM
           value: "{{ $.Values.orderer.orderer_yaml.initialize_from }}"

@@ -153,6 +153,16 @@ service:
       #Provide a cluster IP port for couchdb service to be exposed
       #Eg. clusteripport: 5984
       clusteripport: 5984
+    metrics:
+      #Information on whether the service is enabled or not
+      #Eg. enabled: true
+      enabled: false
+      #Provide a nodeport for metrics endpoint in the range of 30000-32767 (optional)
+      #Eg. nodeport: 30004
+      nodeport:
+      #Provide a cluster IP port for the metrics service to be exposed
+      #Eg. clusteripport: 9443
+      clusteripport: 9443
 
 proxy:
   #This will be the proxy/ingress provider. Can have values "ambassador" or "haproxy"

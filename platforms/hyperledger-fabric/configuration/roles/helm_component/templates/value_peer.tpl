@@ -81,7 +81,12 @@ spec:
 {% if peer.couchdb.nodePort is defined %}
           nodeport: {{ peer.couchdb.nodePort }}
 {% endif %}
-          
+        metrics:
+          enabled: {{ peer.metrics.enabled }}
+{% if peer.metrics.nodeport is defined %}
+          nodeport: {{ peer.metrics.nodeport }}
+{% endif %}
+
     proxy:
       provider: "{{ network.env.proxy }}"
       external_url_suffix: {{ item.external_url_suffix }}
