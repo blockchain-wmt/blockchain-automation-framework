@@ -3,7 +3,9 @@
 - name: Fetch current core.yaml from running peers 
   shell: |
     export POD_NAME=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "{{ peer.name }}-0" | awk '{print $1}')
-    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ component_name }}/${POD_NAME}:/etc/hyperledger/fabric/core.yaml -c {{ peer.name }} ../../../build/{{ peer.name }}-{{ item.name }}-core.yaml
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ component_name }}/${POD_NAME}:/etc/hyperledger/fabric/core.yaml -c {{ peer.name }} ../../../build/{{ peer.name }}-{{ org_name }}-core.yaml
+  vars:
+    org_name: "{{ item.name }}"
   loop_control:
     loop_var: peer
   loop: "{{ component_services.peers }}"

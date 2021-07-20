@@ -37,7 +37,7 @@ spec:
       core_yaml:
         initialize_from: file
         tpl: {{ peer.core_yaml.tpl }}
-{% if peer.core_yaml.tpl == False %}
+{% if peer.core_yaml.tpl == false %}
         base64: {{ core_yaml_file.stdout | b64encode }}
 {% endif %}
 {% if peer.core_yaml.configpath is defined %}

@@ -1,12 +1,13 @@
 ###########################################################################################
+# This task is to create a temporary directory for packaging
+- name: Creates temporary package folder
+  file:
+    state: directory
+    path: "tmp/package/{{ org_ns }}"
 
 # This task copies the certificates used for the packaging to temp folder
 - name: Copies the certificate to temp folder
   shell: |
-    # Creates temp folder for packaging
-    mkdir -p tmp/package/{{ org_ns }}
-
-    # Copies certificates from ca-tools pod to temp folder
     export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ org_ns }} | grep "ca-tools" | awk '{print $1}');
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org_ns }}/${CA_TOOL_CLI}:crypto-config/peerOrganizations/{{ org_ns }}/users/{{ first_peer_name }}-chaincode@{{ org_ns }}/tls ./tmp/package/{{ org_ns }};
   vars:
@@ -86,6 +87,7 @@
   shell: |
     PACKAGE_VAULT_ADDR={{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ org_ns }}/chaincode/{{ chaincode_name }}/package/v{{ chaincode_version }}
     vault write ${PACKAGE_VAULT_ADDR} package-base64="$(cat ./tmp/package/{{ org_ns }}/{{ package_name }}.tgz | base64)"
+    rm -rf ./tmp/package
   vars:
     chaincode_name: "{{ peers[0].chaincode.name | lower }}"
     chaincode_version: "{{ peers[0].chaincode.version }}"
@@ -93,6 +95,13 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+
+# This task delete the packaging temp directory
+- name: Deletes the temp package directory
+  file:
+    path: "tmp/package/{{ org_ns }}"
+    state: absent
+  when: packagefile.stat.exists == true
 
 # This task installs the external chaincode details
 - name: Installs the external chaincode details
