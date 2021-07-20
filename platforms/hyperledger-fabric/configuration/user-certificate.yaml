@@ -62,6 +62,7 @@
         kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
         users: "{{ item.users }}"
+        proxy: "{{ network.env.proxy }}"
         setup_user_env: false
       loop: "{{ network['organizations'] }}"
-      when: item.type == 'peer'
+      when: item.type == 'peer' and item.users is defined
