@@ -88,17 +88,15 @@ spec:
             LOOKUP_SECRET_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_CLIENT_TOKEN}" ${VAULT_ADDR}/v1/${vault_secret_key} | jq -r 'if .errors then . else . end')
             validateVaultResponse "secret (${vault_secret_key})" "${LOOKUP_SECRET_RESPONSE}"
 
-            echo ${LOOKUP_SECRET_RESPONSE};
-
             CACERT=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["ca.crt"]')
             CLIENT_CERT=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["client.crt"]')
             CLIENT_KEY=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["client.key"]')
 
             mkdir -p ${MOUNT_PATH}
 
-            echo "${CACERT}" >> ${MOUNT_PATH}/ca.crt
-            echo "${CLIENT_CERT}" >> ${MOUNT_PATH}/client.crt
-            echo "${CLIENT_KEY}" >> ${MOUNT_PATH}/client.key
+            echo "${CACERT}" > ${MOUNT_PATH}/ca.crt
+            echo "${CLIENT_CERT}" > ${MOUNT_PATH}/client.crt
+            echo "${CLIENT_KEY}" > ${MOUNT_PATH}/client.key
           fi   
         volumeMounts:
         {{ if .Values.vault.tls  }}

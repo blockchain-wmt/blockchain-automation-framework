@@ -555,6 +555,9 @@ chaincode:
     # List of directories to treat as external builders and launchers for
     # chaincode. The external builder detection processing will iterate over the
     # builders in the order specified below.
+    # externalBuilders:
+    #     - path: /var/hyperledger/production/buildpacks
+    #       name: external-builder
     externalBuilders: []
         # - path: /path/to/directory
         #   name: descriptive-builder-name

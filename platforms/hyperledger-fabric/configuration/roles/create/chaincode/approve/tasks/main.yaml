@@ -4,12 +4,19 @@
 #############################################################################################
 
 ############################################################################################
+# Set variable to check approval peers
+# - name: "Create approvalpeers placeholder to store the peers"
+#   set_fact:
+#     approvalpeers: "{{approvalpeers | default({})}}"
+
+############################################################################################
 # Create value file for chaincode approve
 - name: "Create value file for chaincode approve"
   include_tasks: valuefile.yaml
   vars:
     org_query: "organizations[?name=='{{participant.name}}']"
     org: "{{ network | json_query(org_query) | first }}"
+    first_peer_name: "{{(participant.peers | first)['name']}}"
   loop: "{{ participants }}"
   loop_control:
     loop_var: participant

@@ -1,6 +1,6 @@
 ---
 ############################################################################################
-# This role creates the approve_chaincode value file
+# This role creates the approve_chaincode value file, for one peer per org
 
 # Check or Wait if install-chaincode is already run
 - name: "Waiting for chaincode to be installed on {{ peer.name }}"
@@ -56,7 +56,9 @@
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer
-  when: peer.chaincode is defined and approve_chaincode.resources|length == 0
+  when:
+    - peer.chaincode is defined and approve_chaincode.resources|length == 0
+    - peer.name == first_peer_name
 
 #Git Push : Pushes the above generated files to git directory 
 - name: Git Push

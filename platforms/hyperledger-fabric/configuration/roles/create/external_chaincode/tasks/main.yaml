@@ -8,6 +8,7 @@
   loop: "{{ peers }}"
   loop_control:
     loop_var: peer
+    extended: true
   when: 
     - peer.chaincode is defined
     - peer.chaincode.external_chaincode is defined

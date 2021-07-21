@@ -1,0 +1,10 @@
+---
+# This task waits for chaincode to be approved
+- name: "Waiting for chaincode to be approve on {{ peer.name }}"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Job"
+    namespace: "{{ org.name |lower }}-net"
+    kubernetes: "{{ org.k8s }}"
+    component_name: "approvechaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"

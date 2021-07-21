@@ -14,7 +14,9 @@
     - generate-crypto-chaincode-server.sh
   loop_control:
     loop_var: files
-  when: setup_user_env is not defined or setup_user_env == true
+  when: 
+    - setup_user_env is not defined or setup_user_env == true
+    - peer.name == first_peer_name
 
 ############################################################################################
 # This task changes the permission for scripts
@@ -26,7 +28,9 @@
     - generate-crypto-chaincode-server.sh 
   loop_control:
     loop_var: files
-  when: setup_user_env is not defined or setup_user_env == true
+  when: 
+    - setup_user_env is not defined or setup_user_env == true
+    - peer.name == first_peer_name
 
 ############################################################################################
 # This task copies generate-crypto-chaincode-server.sh file using the CA Tools Pod 
@@ -34,21 +38,27 @@
   shell: |
     export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-chaincode-server.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-crypto-chaincode-server.sh  
-  when: setup_user_env is not defined or setup_user_env == true
+  when: 
+    - setup_user_env is not defined or setup_user_env == true
+    - peer.name == first_peer_name
 
 ############################################################################################
 # This task executes generate-crypto-chaincode-server.sh file using the CA Tools to generate user certificate 
 - name: Execute generate-crypto-chaincode-server.sh file using the CA Tools 
   shell: |
     export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
-    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto-chaincode-server.sh {{component_name}} {{org_name|lower}} {{peer.chaincode.name}} chaincode {{org_name}} "{{subject}}" "chaincode-{{peer.chaincode.name}}-{{peer.chaincode.version}}-{{ org_name }}.{{ component_name }}.svc.cluster.local"
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto-chaincode-server.sh {{component_name}} {{org_name|lower}} {{peer.chaincode.name}} chaincode {{org_name}} "{{subject}}" "chaincode-{{peer.chaincode.name}}-{{peer.chaincode.version}}-{{ org_name }}.{{ component_name }}.svc.cluster.local" {{peer.chaincode.version}}
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ component_name }}/${CA_TOOL_CLI}:crypto-config ./build/crypto-config
+  when: 
+    - peer.name == first_peer_name
 
 ############################################################################################
 # Copy certificates to vault
 - name: Copy certificates to vault
   shell: |
-    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/chaincode/{{peer.chaincode.name}} ca.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.chaincode.name}}@{{ component_name }}/tls/ca.crt)" client.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.chaincode.name}}@{{ component_name }}/tls/client.crt)" client.key="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.chaincode.name}}@{{ component_name }}/tls/client.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/chaincode/{{peer.chaincode.name}}/certificate/v{{peer.chaincode.version}} ca.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/chaincode/{{peer.chaincode.name}}-{{peer.chaincode.version}}@{{ component_name }}/tls/ca.crt)" client.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/chaincode/{{peer.chaincode.name}}-{{peer.chaincode.version}}@{{ component_name }}/tls/client.crt)" client.key="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/chaincode/{{peer.chaincode.name}}-{{peer.chaincode.version}}@{{ component_name }}/tls/client.key)"
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+  when:
+    - peer.name == first_peer_name

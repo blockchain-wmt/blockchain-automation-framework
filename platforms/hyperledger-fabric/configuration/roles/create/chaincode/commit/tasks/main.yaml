@@ -4,6 +4,21 @@
 #############################################################################################
 
 ############################################################################################
+# Check if approve-chaincode pods on all orgs are completed
+- name: "Waiting for chaincode to be approve on {{ peer.name }}"
+  include_tasks: wait_for_approval_sub.yaml
+  vars:
+    approve_peer_name: "{{(participant.peers | first)['name']}}"
+    org_query: "organizations[?name=='{{participant.name}}']"
+    org: "{{ network | json_query(org_query) | first }}"
+    peer_query: "peers[?name=='{{approve_peer_name}}']"
+    peer: "{{org.services | json_query(peer_query) | first}}"
+  loop: "{{ participants }}"
+  loop_control:
+    loop_var: participant
+  when: peer.chaincode is defined
+
+############################################################################################
 # Create value file for chaincode commit
 - name: "Create value file for chaincode commit"
   include_tasks: valuefile.yaml
@@ -11,6 +26,28 @@
     channelcreator_query: "participants[?type=='creator']"
     org_query: "organizations[?name=='{{participant.name}}']"
     org: "{{ network | json_query(org_query) | first }}"
+    commit_peer_name: "{{(org.services.peers | first)['name']}}"
   loop: "{{ item | json_query(channelcreator_query) }}"
   loop_control:
     loop_var: participant
+
+
+############################################################################################
+# This task only check for the first peer of the first creator listed
+- name: "Waiting for chaincode to be commited on {{ peer.name }}"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    channelcreator_query: "participants[?type=='creator']"
+    org_query: "organizations[?name=='{{participant.name}}']"
+    org: "{{ network | json_query(org_query) | first }}"
+    peer: "{{ org.services.peers | first}}"
+    kubernetes: "{{ org.k8s }}"
+    component_type: "Job"
+    namespace: "{{ org.name | lower }}-net"
+    component_name: "commitchaincode-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence }}"
+  loop: "{{ (item | json_query(channelcreator_query))[0:1] }}"
+  loop_control:
+    loop_var: participant 
+  when: 
+    - peer.chaincode is defined and '2.' in network.version

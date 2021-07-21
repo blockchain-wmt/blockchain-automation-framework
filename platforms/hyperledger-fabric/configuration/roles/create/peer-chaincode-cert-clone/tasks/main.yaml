@@ -1,0 +1,80 @@
+############################################################################################
+# This is a test
+- name: Display all peers
+  ansible.builtin.debug:
+    msg: "Found {{ services | community.general.json_query('peers[*].name') | join(' ') }} for org {{ component_name }}"
+
+- name: Fails the job if peers are undefined
+  fail:
+    msg: peers are undefined for {{ component_name }} 
+  when: services.peers is not defined or services.peers | length == 0
+
+- name: Wait for debugging
+  pause:
+    prompt: Press any key to continue
+
+############################################################################################
+# Copy generate-crypto-shared-peer-chaincode.sh script from scrips directory
+- name: Copy generate-crypto-shared-peer-chaincode.sh to destination directory
+  copy:
+    src: "{{ playbook_dir }}/../scripts/{{ files }}"
+    dest: build/
+    mode: 0755
+    remote_src: yes
+  with_items:
+    - generate-crypto-shared-peer-chaincode.sh
+  loop_control:
+    loop_var: files
+  when: setup_user_env is not defined or setup_user_env == true
+
+############################################################################################
+# This task changes the permission 
+- name: Changing the permissions
+  file:  
+    path: ./build/{{ files }} 
+    mode: '0775'
+  with_items:
+    - generate-crypto-shared-peer-chaincode.sh
+  loop_control:
+    loop_var: files
+  when: setup_user_env is not defined or setup_user_env == true
+
+############################################################################################
+# This task copies generate-crypto-shared-peer-chaincode.sh file using the CA Tools Pod 
+- name: Copy generate-crypto-shared-peer-chaincode.sh file using the CA Tools 
+  shell: |
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-shared-peer-chaincode.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-crypto-shared-peer-chaincode.sh  
+  when: setup_user_env is not defined or setup_user_env == true
+
+
+############################################################################################
+# This section is to generate user certificate for peers in the same org using same certificates
+# This task executes generate-crypto-shared-peer-chaincode.sh file using the CA Tools to generate user certificate 
+- name: Execute generate-crypto-shared-peer-chaincode.sh file using the CA Tools
+  shell: |
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto-shared-peer-chaincode.sh {{component_name}} {{org_name|lower}} {{first_peer_name}}-chaincode app {{org_name}} "{{subject}}" "{{peerlist}}"
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ component_name }}/${CA_TOOL_CLI}:crypto-config ./build/crypto-config
+  vars:
+    first_peer_name: "{{ services.peers[0].name }}"
+    peerlist: "{{ services | community.general.json_query('peers[*].name') | join(' ') }}"
+
+# This task creates certs for peer for external chaincode servers
+- name: Creates certs for peer for external chaincode servers
+  include_tasks: nested_main.yaml
+  loop: "{{ services.peers }}"
+  loop_control:
+    loop_var: peer
+  when: 
+    - peer.chaincode is defined
+    - peer.chaincode.external_chaincode is defined
+    - peer.chaincode.external_chaincode == true  
+    - peer.chaincode.tls_disabled == false
+  vars:
+    temp_peer_cert_folder: build/tmp/certs/crypto-config
+
+# This task clean up variable for the next org
+- name: Clean up variable
+  set_fact:
+    cert_generated: !!null

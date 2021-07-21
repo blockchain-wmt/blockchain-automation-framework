@@ -1,4 +1,10 @@
 ############################################################################################
+# This task clean up the temp folder for certificate generation
+- name: Clean up temp folder
+  file:
+    state: absent
+    path: build/tmp/certs
+
 # This task creates certs for peer for external chaincode servers
 - name: Creates certs for peer for external chaincode servers
   include_tasks: nested_main.yaml
@@ -10,3 +16,10 @@
     - peer.chaincode.external_chaincode is defined
     - peer.chaincode.external_chaincode == true  
     - peer.chaincode.tls_disabled == false
+  vars:
+    temp_peer_cert_folder: build/tmp/certs/crypto-config
+
+# This task clean up variable for the next org
+- name: Clean up variable
+  set_fact:
+    cert_generated: !!null
