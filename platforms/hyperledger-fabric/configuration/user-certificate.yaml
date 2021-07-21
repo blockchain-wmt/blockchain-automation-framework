@@ -63,6 +63,6 @@
         vault: "{{ item.vault }}"
         users: "{{ item.users }}"
         proxy: "{{ network.env.proxy }}"
-        setup_user_env: false
+        ca_url: "{{ item.ca_data.url }}"
       loop: "{{ network['organizations'] }}"
       when: item.type == 'peer' and item.users is defined
