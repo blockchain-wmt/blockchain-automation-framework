@@ -1,0 +1,96 @@
+# This playbook adds an external organization MSP details to desired channel config and generates
+# a Config Envelope to be signed before submission
+# The Kubernetes clusters should already be created and the information to connect to the
+# clusters be updated in the network.yaml file that is used as an input to this playbook
+###########################################################################################
+# To Run this playbook from this directory, use the following command (network.yaml also in this directory)
+#  ansible-playbook add-organization-msp.yaml -e "@./network.yaml" -e "add_new_org='true'"
+############################################################################################
+# Please ensure that the ../../shared/configuration playbooks have been run and a DLT network exists.
+# Please ensure that you follow the sample network-fabric-add-organization.yaml
+# The MSP details of the target org should be available at 
+# blockchain-automation-framework/platforms/hyperledger-fabric/configuration/build/crypto-config/peerOrganizations/{target-org-namespace}/msp/
+# The envelope is generated at 
+# blockchain-automation-framework/platforms/hyperledger-fabric/configuration/build/
+# The above envelope needs to be signed by the target org before submission
+---
+  # This will apply to ansible_provisioners. /etc/ansible/hosts should be configured with this group
+- hosts: ansible_provisioners
+  gather_facts: no
+  tasks:
+
+    # Generate script to modify the fetched configuration block
+    - include_role:
+        name: "create/new_organization/create_block"
+      vars:
+        build_path: "./build"
+        participants: "{{ channel.participants }}"
+        channel_name: "{{ channel.channel_name | lower}}"
+      loop: "{{ network['channels'] }}"
+      loop_control:
+        loop_var: channel
+
+    # Creating channel artifacts and putting them in vault
+    # This role creates configtx.yaml file as the requirements mentioned in network.yaml
+    # which is then consumed by configtxgen tool
+    - include_role:
+        name: "create/configtx"
+      vars:
+        config_file: "./build/configtx.yaml"
+
+    # This role generate genesis block and channeltx
+    # Generates the config.json from the configtx.yaml for new organization
+    - include_role:
+        name: "create/channel_artifacts"
+      vars:
+        build_path: "./build"
+        genesis: "{{ item.genesis }}"
+        channel_name: "{{ item.channel_name | lower}}"
+        profile_name: "{{ item.channel_name }}"
+      loop: "{{ network['channels'] }}"
+
+    # This role is to start the existing peer cli
+    # Fetch the configuration block and modify the block
+    - include_role:
+        name: "setup/config_block/fetch"
+      vars:
+        build_path: "./build"
+        participants: "{{ item.participants }}"
+        docker_url: "{{ network.docker.url }}"
+      loop: "{{ network['channels'] }}"
+
+    # This role is to get joiner peer signatures
+    - include_role:
+        name: "setup/config_block/joiner_peer_sign"
+      vars:
+        build_path: "./build"
+        participants: "{{ item.participants }}"
+        docker_url: "{{ network.docker.url }}"
+      when: item.update_config.joiner_peer_sign is defined and item.update_config.joiner_peer_sign is true
+      loop: "{{ network['channels'] }}"
+
+    # This role is to get orderer signatures
+    - include_role:
+        name: "setup/config_block/orderer_sign"
+      vars:
+        build_path: "./build"
+        participants: "{{ item.participants }}"
+        docker_url: "{{ network.docker.url }}"
+      when: item.update_config.orderer_sign is defined and item.update_config.orderer_sign is true
+      loop: "{{ network['channels'] }}"
+
+    # This role is to submit the signed config to the channel
+    - include_role:
+        name: "setup/config_block/update"
+      vars:
+        build_path: "./build"
+        participants: "{{ item.participants }}"
+        docker_url: "{{ network.docker.url }}"
+        fetch_only: true
+      loop: "{{ network['channels'] }}"
+
+  vars: #These variables can be overriden from the command line
+    privilege_escalate: false           #Default to NOT escalate to root privledges
+    install_os: "linux"                 #Default to linux OS
+    install_arch:  "amd64"              #Default to amd64 architecture
+    bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries

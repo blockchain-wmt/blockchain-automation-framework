@@ -49,10 +49,10 @@
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} -- configtxlator compute_update --channel_id {{ channel_name }} --original {{ channel_name }}_config.pb --updated {{ channel_name }}_modified_config.pb --output {{ channel_name }}_config_update.pb 
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} -- configtxlator proto_decode --input {{ channel_name }}_config_update.pb --type common.ConfigUpdate --output {{ channel_name }}_config_update.json
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name }}_config_update.json ./build/{{ channel_name }}_config_update.json
-    echo '{"payload":{"header":{"channel_header":{"channel_id":"'{{ channel_name }}'", "type":2}},"data":{"config_update":'$(cat ./build/{{ channel_name }}_config_update.json)'}}}' | jq . > ./build/{{ channel_name }}_config_update_in_envelope.json
-    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/{{ channel_name }}_config_update_in_envelope.json {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name }}_config_update_in_envelope.json
-    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} -- configtxlator proto_encode --input {{ channel_name }}_config_update_in_envelope.json --type common.Envelope --output {{ channel_name }}_config_update_in_envelope.pb
-    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name }}_config_update_in_envelope.pb ../../../build/{{ channel_name }}_config_update_in_envelope.pb
+    echo '{"payload":{"header":{"channel_header":{"channel_id":"'{{ channel_name }}'", "type":2}},"data":{"config_update":'$(cat ./build/{{ channel_name }}_config_update.json)'}}}' | jq . > ./build/{{ channel_name }}_update_in_envelope.json
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/{{ channel_name }}_update_in_envelope.json {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name }}_update_in_envelope.json
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} -- configtxlator proto_encode --input {{ channel_name }}_update_in_envelope.json --type common.Envelope --output {{ channel_name }}_update_in_envelope.pb
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name }}_update_in_envelope.pb ../../../build/{{ channel_name }}_update_in_envelope.pb
   environment:
     ORDERER_CA: "/opt/gopath/src/github.com/hyperledger/fabric/crypto/orderer/tls/ca.crt"
   vars: 

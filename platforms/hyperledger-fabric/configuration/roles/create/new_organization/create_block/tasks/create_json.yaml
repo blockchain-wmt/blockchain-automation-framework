@@ -37,4 +37,4 @@
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer
-  when: peer.type == 'anchor'
+  when: peer.type is defined and peer.type == 'anchor'
