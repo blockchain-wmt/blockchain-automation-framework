@@ -5,8 +5,11 @@ set -x
 CURRENT_DIR=${PWD}
 
 echo "installing jq "
-#apt-get install -y jq
+{% if '2.' in network.version %}
 apk add jq
+{% else %}
+apt-get install -y jq
+{% endif %}
 echo "installing configtxlator"
 mkdir temp
 cd temp/

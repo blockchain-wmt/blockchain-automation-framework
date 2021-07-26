@@ -73,8 +73,6 @@ and under `network.organizations` as
 
           services:
             ca:
-              name: ca
-              type: ca
               grpc:
                 port: 7054
             peers:
