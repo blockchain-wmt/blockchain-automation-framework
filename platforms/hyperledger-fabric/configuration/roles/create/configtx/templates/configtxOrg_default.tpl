@@ -21,7 +21,7 @@
       # for cross org gossip communication.  Note, this value is only
       # encoded in the genesis block in the Application section context
 {% for peer in  item.services.peers %}
-{% if peer.type == 'anchor' %}
+{% if peer.type is defined and peer.type == 'anchor' %}
 {% if provider == 'none' %}
       - Host: {{ peer.name }}.{{ component_ns }}
         Port: 7051

@@ -10,6 +10,7 @@
   loop: "{{ item | json_query(channelcreator_query) }}"
   loop_control:
     loop_var: peer
+  when: peer.external_org is undefined or peer.external_org == 'false'
   
 # Task for creating the cli for first peer of each organization
 # Config block gets signed by the admin of every organization

@@ -46,7 +46,7 @@
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/channel-artifacts/{{ channel_name | lower}}-anchorfile.json {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/anchorfile.json
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} -- chmod 777 ./create_block.sh
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ org.name }}-net ${PEER_CLI} --  sh ./create_block.sh
-    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name | lower }}_update_in_envelope.pb ./build/{{ channel_name | lower}}_config_block.pb
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ org.name }}-net/${PEER_CLI}:/opt/gopath/src/github.com/hyperledger/fabric/peer/{{ channel_name | lower }}_update_in_envelope.pb ../../../build/{{ channel_name | lower}}_config_block.pb
   environment:
     ORDERER_CA: "/opt/gopath/src/github.com/hyperledger/fabric/crypto/orderer/tls/ca.crt"
   vars: 

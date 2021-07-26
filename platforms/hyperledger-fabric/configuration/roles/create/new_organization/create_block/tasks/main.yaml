@@ -1,7 +1,11 @@
 #############################################################################################
 # This role creates the block modification script.
 #############################################################################################
-
+# This task ensure build folder exists
+- name: Ensure channel-artifacts dir exists
+  file:
+    path: "{{ build_path }}"
+    state: directory
 
 # Task generates the json file for anchor peer updation
 - name: Call nested_create_json for each peer
@@ -14,14 +18,16 @@
   loop: "{{ participants }}"
   loop_control:
     loop_var: participant
-  when: participant.org_status == 'new'
+  when: 
+    - participant.org_status == 'new'
+    - participant.external_org is not defined or participant.external_org == 'false'
 
 ############################################################################################
 # This task creates the generate_block.sh file for new organizations
 - name: "Create create-block-{{ channel_name }}.sh script file for new organisations"
   template:
     src: "organisation_script.tpl"
-    dest: "./build/create-block-{{ channel_name }}.sh"
+    dest: "./build/create-block-{{ channel_name | lower }}.sh"
   vars:
     component_name: "{{ participant.name | lower }}"
     orderer_address: " {{ participant.ordererAddress }} "
