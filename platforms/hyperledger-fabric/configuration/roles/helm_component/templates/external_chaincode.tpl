@@ -39,7 +39,7 @@ spec:
 {% if peer.chaincode.private_registry is not defined or peer.chaincode.private_registry == false %}   
       imagesecretname: regcred
 {% endif %}
-{% if peer.chaincode.private_registry is defined or peer.chaincode.private_registry == true %}   
+{% if peer.chaincode.private_registry is defined and peer.chaincode.private_registry == true %}   
       imagesecretname: chaincode-private-regcred
 {% endif %}
     service:
