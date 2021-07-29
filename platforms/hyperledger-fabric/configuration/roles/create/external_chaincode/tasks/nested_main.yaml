@@ -27,6 +27,27 @@
   when: ext_chaincode_server.resources|length == 0
 
 ############################################################################################
+# Check if private credentials exist already
+- name: "Checking if the docker credentials already exists"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/setup"
+  vars:
+    check: "chaincode_private_registry_credentials"
+    component_name: "{{ item.name | lower }}-net"
+  register: get_chaincode_private_regcred
+  when: peer.chaincode.private_registry is defined and peer.chaincode.private_registry == true
+
+# This task creates the docker pull credentials for private image registry
+- name: Create the private registry pull credentials
+  shell: |
+    KUBECONFIG={{ kubernetes.config_file }} kubectl create secret -n {{ component_name }} docker-registry chaincode-private-regcred --docker-server={{ peer.chaincode.registry.server }} --docker-username={{ peer.chaincode.registry.username }} --docker-password={{ peer.chaincode.registry.password }} --docker-email="test@abc.mail"
+  vars:
+    component_name: "{{ item.name | lower }}-net"
+  when: 
+    - peer.chaincode.private_registry is defined and peer.chaincode.private_registry == true
+    - get_chaincode_private_regcred.resources|length == 0
+
+############################################################################################
 # This task creates value files for chaincode server
 - name: Create Value files for chaincode server
   include_role:
