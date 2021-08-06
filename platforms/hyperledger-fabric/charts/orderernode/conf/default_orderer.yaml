@@ -323,7 +323,11 @@ Operations:
 ################################################################################
 Metrics:
     # The metrics provider is one of statsd, prometheus, or disabled
+    {{ if $.Values.service.ports.metrics.enabled }}
+    Provider: prometheus
+    {{ else }}
     Provider: disabled
+    {{ end }}
 
     # The statsd configuration
     Statsd:

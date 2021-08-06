@@ -228,11 +228,12 @@ spec:
           cat /var/hyperledger/orderer/genesis/genesis.block.base64 | base64 -d > /var/hyperledger/orderer/orderer.genesis.block;
           orderer
         ports:
-        - containerPort: 7050
-        {{- if $.Values.service.ports.metrics.enabled }}
+        - name: grpc
+          containerPort: 7050
+        {{ if $.Values.service.ports.metrics.enabled }}
         - name: metrics
           containerPort: 9443
-        {{- end }}
+        {{ end }}
         env:
         - name: INITIALIZE_FROM
           value: "{{ $.Values.orderer.orderer_yaml.initialize_from }}"

@@ -43,6 +43,12 @@ spec:
 {% if peer.core_yaml.configpath is defined %}
         configpath: conf/{{ peer_name }}_{{ name }}_core.yaml
 {% endif %}
+      chaincode:
+{% if peer.chaincode is defined and peer.chaincode.external_chaincode is defined %}
+        external_chaincode: {{ peer.chaincode.external_chaincode}}
+{% else %}
+        external_chaincode: false
+{% endif %}        
 {% endif %}
 
     storage:
@@ -83,8 +89,10 @@ spec:
 {% endif %}
         metrics:
           enabled: {{ peer.metrics.enabled }}
-{% if peer.metrics.nodeport is defined %}
-          nodeport: {{ peer.metrics.nodeport }}
+{% if peer.metrics.clusteripport is defined %}
+          clusteripport: {{ peer.metrics.clusteripport }}
+{% else %}
+          clusteripport: 9443
 {% endif %}
 
     proxy:
