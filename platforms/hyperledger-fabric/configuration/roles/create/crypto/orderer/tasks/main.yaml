@@ -34,7 +34,9 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
-  when: vault_admin_result.failed == True and network.env.proxy != 'none'
+  when: 
+    - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+    - network.env.proxy != 'none'
 
 - name: Copy organization level certificates for orgs
   shell: |
@@ -43,4 +45,7 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
-  when: vault_admin_result.failed == True and network.env.proxy == 'none'
+  when: 
+    - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+    - network.env.proxy == 'none'
+
