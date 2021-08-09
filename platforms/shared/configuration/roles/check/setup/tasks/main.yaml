@@ -47,3 +47,15 @@
     context: "{{ kubernetes.context }}"
   register: get_regcred
   when: check == "docker_credentials"
+
+# Check if private registry credentials exist already
+- name: Check chaincode private cred exists
+  k8s_info:
+    kind: Secret
+    namespace: "{{ component_name }}"
+    name: "chaincode-private-regcred"
+    kubeconfig: "{{ kubernetes.config_file }}"
+    context: "{{ kubernetes.context }}"
+  register: get_chaincode_private_regcred
+  when: check == "chaincode_private_registry_credentials"
+  

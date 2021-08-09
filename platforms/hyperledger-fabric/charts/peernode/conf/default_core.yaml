@@ -165,7 +165,7 @@ peer:
         msgExpirationFactor: 20
         # This is an endpoint that is published to peers outside of the organization.
         # If this isn't set, the peer will not be known to other organizations.
-        externalEndpoint:
+        externalEndpoint: {{ $.Values.peer.gossipexternalendpoint }}
         # Leader election service configuration
         election:
             # Longest time peer waits for stable membership during leader election startup (unit: second)
@@ -555,10 +555,13 @@ chaincode:
     # List of directories to treat as external builders and launchers for
     # chaincode. The external builder detection processing will iterate over the
     # builders in the order specified below.
-    # externalBuilders:
-    #     - path: /var/hyperledger/production/buildpacks
-    #       name: external-builder
+    {{ if $.Values.peer.chaincode.external_chaincode }}
+    externalBuilders:
+        - path: /var/hyperledger/production/buildpacks
+          name: external-builder
+    {{ else }}
     externalBuilders: []
+    {{ end }}
         # - path: /path/to/directory
         #   name: descriptive-builder-name
         #   propagateEnvironment:
@@ -733,7 +736,11 @@ operations:
 ###############################################################################
 metrics:
     # metrics provider is one of statsd, prometheus, or disabled
+    {{ if $.Values.service.ports.metrics.enabled }}
+    provider: prometheus
+    {{ else }}
     provider: disabled
+    {{ end }}
 
     # statsd configuration
     statsd:

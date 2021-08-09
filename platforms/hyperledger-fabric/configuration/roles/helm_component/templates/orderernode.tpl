@@ -53,8 +53,10 @@ spec:
 {% endif %}
         metrics:
           enabled: {{ orderer.metrics.enabled }}
-{% if orderer.metrics.nodeport is defined %}
-          nodeport: {{ orderer.metrics.nodeport }}
+{% if orderer.metrics.clusteripport is defined %}
+          clusteripport: {{ orderer.metrics.clusteripport }}
+{% else %}
+          clusteripport: 9443
 {% endif %}
 
     vault:
