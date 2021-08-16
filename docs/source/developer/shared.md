@@ -17,8 +17,11 @@ Playbook kubernetes-env-setup.yaml executes the roles which has tasks to configu
 
     * flux
     * ambassador    (if chosen)
-    * haproxy-ingress   (if chosen)
 
+3. **cluster-env-setup.yaml**
+Playbook cluster-env-setup.yaml executes the roles which has tasks to configure the following on each Kubernetes cluster:
+
+    * haproxy-ingress   (if chosen)
 All the common Ansible roles can be found at [platforms/shared/configuration/roles](https://github.com/hyperledger-labs/blockchain-automation-framework/tree/master/platforms/shared/configuration/roles)
 
 * setup/ambassador
