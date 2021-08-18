@@ -7,6 +7,7 @@
     no_log: True
   - import_playbook: environment-setup.yaml   # First setup environment for each organization
   - import_playbook: kubernetes-env-setup.yaml # Then deploy Flux for each organization
+  - import_playbook: cluster-env-setup.yaml # Then deploy HAproxy for cluster
     when: reset is undefined or reset == 'false'
   - import_playbook: "{{ playbook_dir }}/../../hyperledger-fabric/configuration/deploy-network.yaml"
     vars:
