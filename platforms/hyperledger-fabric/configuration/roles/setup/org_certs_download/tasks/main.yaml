@@ -1,0 +1,62 @@
+#############################################################################################
+# This role download the org MSP related certificates from vault
+#############################################################################################
+
+# Download org MSP certificates from Vault to target folder
+# TODO: Optimize with result check and regex compare for user 
+- name: Download org msp certificates for adding new org msp including all users
+  shell: |
+    result=$(vault kv list -format=json secret/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/)
+    for user in $(echo "$result" | jq -r '.[]'); do
+      mkdir -p {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp
+      vault kv get -field=admincerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp > admincerts.pem
+      mv admincerts.pem {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp
+      vault kv get -field=cacerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp > cacerts.pem
+      mv cacerts.pem {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp
+      vault kv get -field=tlscacerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp > tlscacerts.pem
+      mv tlscacerts.pem {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/${user}msp
+    done
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: organization.type == "peer"
+
+# Download org MSP certificates from Vault to target folder
+- name: Download orderer ca certificates for joining channel
+  shell: |
+    mkdir -p {{ orgCertsDir }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/ca/
+    vault kv get -field=ca.{{ organization.name | lower }}-net-cert.pem {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/ca > ca.crt.pem
+    mv ca.crt.pem {{ orgCertsDir }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/ca
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: organization.type == "orderer"
+
+# Download peer tlscacert from Vault to target folder
+- name: Download peer tlscacert
+  shell: |
+    result=$(vault kv list -format=json secret/crypto/peerOrganizations/{{ organization.name | lower }}-net/peers/)
+    for peer in $(echo "$result" | jq -r '.[]'); do
+      mkdir -p {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/peers/${peer}msp
+      vault kv get -field=tlscacerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/peers/${peer}msp > tlscacerts.pem
+      mv tlscacerts.pem {{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/peers/${peer}msp
+    done
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: organization.type == "peer"
+
+# Download orderer tlscacert from Vault to target folder
+# Download peer tlscacert from Vault to target folder
+- name: Download orderer tlscacert
+  shell: |
+    result=$(vault kv list -format=json secret/crypto/ordererOrganizations/{{ organization.name | lower }}-net/orderers/)
+    for orderer in $(echo "$result" | jq -r '.[]'); do
+      mkdir -p {{ orgCertsDir }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/orderers/${orderer}msp
+      vault kv get -field=tlscacerts {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/orderers/${orderer}msp > tlscacerts.pem
+      mv tlscacerts.pem {{ orgCertsDir }}/crypto/ordererOrganizations/{{ organization.name | lower }}-net/orderers/${orderer}msp
+    done
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: organization.type == "orderer"

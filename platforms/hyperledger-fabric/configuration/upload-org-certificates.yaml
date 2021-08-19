@@ -1,0 +1,28 @@
+# This playbook upload public certificates from local directory to vault,
+#  which will be used for network creation
+###########################################################################################
+# To Run this playbook from this directory, use the following command (network.yaml also in this directory)
+# ansible-playbook platforms/hyperledger-fabric/configuration/upload-org-certificates.yaml -e 'ansible_python_interpreter=/usr/bin/python3' -e "@./build/network.yaml" -vvv
+###########################################################################################
+
+---
+- hosts: ansible_provisioners
+  gather_facts: no
+  tasks:
+
+    - name: Upload org certificates to vault
+      include_role:
+        name: "setup/org_certs_upload"
+      loop: "{{ network['organizations'] }}"
+      vars:
+        orgCertsDir: "{{ organization.orgCertsDir }}"
+        vault: "{{ organization.vault }}"
+      loop_control:
+        loop_var: organization
+      when: organization.orgCertsDir is defined
+
+  vars: #These variables can be overriden from the command line
+    privilege_escalate: false           #Default to NOT escalate to root privledges
+    install_os: "linux"                 #Default to linux OS
+    install_arch:  "amd64"              #Default to amd64 architecture
+    bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries

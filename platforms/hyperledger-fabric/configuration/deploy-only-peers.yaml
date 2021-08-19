@@ -36,7 +36,7 @@
         kubernetes: "{{ item.k8s }}"
         vault: "{{ item.vault }}"
         component_type: "{{ item.type | lower }}"
-        auth_path: "{{ item.name | lower }}-net-auth"
+        auth_path: "{{ network.env.type }}{{ item.name | lower }}-net-auth"
       loop: "{{ network['organizations'] }}"
 
     # Create Storageclass 
@@ -144,7 +144,10 @@
       loop: "{{ network.organizations }}"
       loop_control:
         loop_var: org
-      when: org.type == "peer" and org.org_status == "new"
+      when: 
+        - org.type == "peer" and org.org_status == "new"
+        - (network.orderers is defined) and (network.orderers | length > 0)
+      
 
   vars: #These variables can be overriden from the command line
     privilege_escalate: false           #Default to NOT escalate to root privledges

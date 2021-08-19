@@ -1,0 +1,26 @@
+- name: ensure user cacert file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser | lower }}-net/users/admin/msp/cacerts.pem"
+  register: file_checks
+  failed_when: file_checks.stat.exists == false
+  loop: "{{ channel.endorsers.name }}"
+  loop_control:
+    loop_var: endorser
+  when: 
+    - channel.endorsers is defined
+    - channel.endorsers.name is defined
+    - endorser != org
+
+- name: upload admin cacert to vault for endorser
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ org | lower}}-net/endorsers/{{ endorser }}/users/admin/msp cacert="$(cat {{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser | lower }}-net/users/admin/msp/cacerts.pem)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  loop: "{{ channel.endorsers.name }}"
+  loop_control:
+    loop_var: endorser
+  when: 
+    - channel.endorsers is defined
+    - channel.endorsers.name is defined
+    - endorser != org

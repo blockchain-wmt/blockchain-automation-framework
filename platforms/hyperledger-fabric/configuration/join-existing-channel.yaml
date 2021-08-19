@@ -12,6 +12,20 @@
   gather_facts: no
   tasks:
 
+    # Create CLI pod for peers with cli option enabled
+    - name: Create CLI pod for each peer with it enabled
+      include_role:
+        name: "create/cli_pod"
+      vars:
+        peers: "{{ org.services.peers }}"
+        docker_url: "{{ network.docker.url }}"
+      loop: "{{ network.organizations }}"
+      loop_control:
+        loop_var: org
+      when: 
+        - org.type == "peer" and org.org_status == "new"
+        - (network.orderers is defined) and (network.orderers | length > 0)
+
     # This role creates the value file for joining channel from each participating peer
     # to the vault.
     - name: Create all join-channel jobs
