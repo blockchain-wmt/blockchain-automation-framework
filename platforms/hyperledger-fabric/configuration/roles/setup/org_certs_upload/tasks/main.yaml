@@ -1,0 +1,71 @@
+#############################################################################################
+# This role upload the org MSP related certificates to vault
+#############################################################################################
+
+# this task ensures the necessary admin msp certificates exist
+- name: ensure admin msp file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/admin/msp/{{ item }}"
+  with_items:
+    - admincerts.pem
+    - cacerts.pem
+    - tlscacerts.pem
+  register: check_files
+  when: organization.type == "peer"
+
+- name: check file exists status
+  set_fact:
+    cert_missing: true
+  loop: "{{ check_files.results }}"
+  loop_control:
+    loop_var: result
+  when:
+    - organization.type == "peer"
+    - result.stat.exists == false
+
+- name: missing certificate(s) (admincerts.pem, cacerts.pem, tlscacerts.pem)
+  debug:
+    msg: "Missing certificates in directory"
+  when:
+    - organization.type == "peer"
+    - cert_missing | default(None) != None
+
+# this task upload the certificates to vault
+- name: upload admin msp certificates to vault
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/admin/msp admincerts="$(cat {{ certPath }}/admincerts.pem)" cacerts="$(cat {{ certPath }}/cacerts.pem)" tlscacerts="$(cat {{ certPath }}/tlscacerts.pem)" 
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  vars:
+    certPath: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/admin/msp"
+  when: 
+    - organization.type == "peer"
+    - cert_missing | default(None) == None
+
+# this task upload orderer ca cert to vault based on channel definition
+- name: upload orderer ca cert to vault
+  include_tasks: orderer_cacert_upload.yaml
+  loop: "{{ network.channels }}"
+  loop_control:
+    loop_var: channel
+  vars:
+    org: "{{ organization.name }}"
+  when: 
+    - organization.type == "peer"
+    - network.channels is defined
+
+# this task uploads endorsers certificates for the creator orgs
+- name: upload endorser certificate(s)
+  include_tasks: endorser_cacert_upload.yaml
+  loop: "{{ network.channels }}"
+  loop_control:
+    loop_var: channel
+  vars:
+    org: "{{ organization.name }}"
+    org_query: "participants[?name=='{{ org }}']"
+    org_channel_type: "{{ (channel | json_query(org_query) | first)['type'] }}"
+  when: 
+    - organization.type == "peer"
+    - network.channels is defined
+    - org_channel_type == "creator"

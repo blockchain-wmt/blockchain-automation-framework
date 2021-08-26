@@ -1,0 +1,23 @@
+# This playbook is used to submit the signed updated config block envelope for updating channel config
+# The Kubernetes clusters should already be created and the information to connect to the
+# clusters be updated in the network.yaml file that is used as an input to this playbook
+###########################################################################################
+# To Run this playbook from this directory, use the following command (network.yaml also in this directory)
+#  ansible-playbook sign-update-config-envelope.yaml -e "@./network.yaml"
+############################################################################################
+# Please ensure that the ../../shared/configuration playbooks have been run and a DLT network exists.
+---
+  # This will apply to ansible_provisioners. /etc/ansible/hosts should be configured with this group
+- hosts: ansible_provisioners
+  gather_facts: no
+  tasks:
+
+    # This role is to get orderer signatures
+    - include_role:
+        name: "setup/config_block/orderer_sign"
+      vars:
+        build_path: "./build"
+        participants: "{{ item.participants }}"
+        docker_url: "{{ network.docker.url }}"
+      when: item.update_config.orderer_sign is defined and item.update_config.orderer_sign is true
+      loop: "{{ network['channels'] }}"

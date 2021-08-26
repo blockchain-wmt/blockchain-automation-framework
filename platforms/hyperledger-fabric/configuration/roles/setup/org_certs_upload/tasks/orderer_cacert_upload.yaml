@@ -1,0 +1,19 @@
+# this task ensures the necessary admin msp certificates exist
+- name: ensure orderer ca cert file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ channel.orderer.name | lower }}-net/orderer/ca.crt.pem"
+  vars:
+    org_list: "{{ channel.participants | map(attribute = 'organization.name') }}"
+  register: check_file
+  failed_when: check_file.stat.exists == false
+  when: 
+    - channel.participants is defined
+    - org in org_list
+
+- name: upload orderer cert to vault for org orderer
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ org | lower }}-net/orderer ca.crt="$(cat {{ orgCertsDir }}/crypto/ordererOrganizations/{{ channel.orderer.name | lower }}-net/ca/ca.crt.pem)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: channel.orderer is defined

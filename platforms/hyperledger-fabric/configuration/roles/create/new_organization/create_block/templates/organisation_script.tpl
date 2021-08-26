@@ -23,7 +23,7 @@ configtxlator proto_decode --input {{ channel_name }}_config_block.pb --type com
 echo "adding new organization crypto material from config.json to the channel_config.json to make channel_modified_config.json"
 jq -s '.[0] * {"channel_group":{"groups":{"Application":{"groups": {"{{ component_name }}MSP":.[1]}}}}}' {{ channel_name }}_config.json ./config.json > {{ channel_name }}_modified_config_without_anchorpeer.json
 
-{% if participant.external_org is not defined or participant.external_org == false %}
+{% if participant.external_org is not defined or participant.external_org.skip_anchor is not defined or participant.external_org.skip_anchor == false %}
 echo "adding anchor peer information to the block"
 jq '.channel_group.groups.Application.groups.{{ component_name }}MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": ['$(cat ./anchorfile.json)']},"version": "0"}}' {{ channel_name }}_modified_config_without_anchorpeer.json > {{ channel_name }}_modified_config.json
 {% else %}

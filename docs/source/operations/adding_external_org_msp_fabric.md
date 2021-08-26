@@ -42,7 +42,9 @@ While modifying the configuration file(`network.yaml`) for adding new organizati
           name: ccrr
           type: joiner       # creator organization will create the channel and instantiate chaincode, in addition to joining the channel and install chaincode
           org_status: new  # new for the org
-          external_org: true # indicates it's an external org
+          external_org: # indicates it's an external org
+            skip_anchor: true # skips anchor peer definition for the org
+            skip_check: true # skips the pod check for the org
 ```
 
 and under `network.organizations` as
