@@ -24,11 +24,12 @@
     # remove this if not needed
     - name: Uninstall flux
       shell: |
-        KUBECONFIG={{ kubernetes.config_file }} kubectl delete secret git-auth-{{ network.env.type }}
-        KUBECONFIG={{ kubernetes.config_file }} helm uninstall flux-{{ network.env.type }}
-        KUBECONFIG={{ kubernetes.config_file }} helm uninstall flux-{{ network.env.type }}-helm-operator
+        KUBECONFIG={{ kubernetes.config_file }} kubectl delete secret git-auth-{{ branch }}
+        KUBECONFIG={{ kubernetes.config_file }} helm uninstall flux-{{ branch }}
+        KUBECONFIG={{ kubernetes.config_file }} helm uninstall flux-{{ branch }}-helm-operator
       vars:
         kubernetes: "{{ item.k8s }}"
+        branch: "{{ item.gitops.branch }}"
       loop: "{{ network['organizations'] }}"
       ignore_errors: yes
 
