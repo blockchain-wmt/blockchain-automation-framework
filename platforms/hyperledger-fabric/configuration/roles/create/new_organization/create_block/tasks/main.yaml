@@ -20,7 +20,7 @@
     loop_var: participant
   when: 
     - participant.org_status == 'new'
-    - participant.external_org is not defined or participant.external_org.skip_check is not defined or participant.external_org.skip_check == 'false'
+    - participant.external_org is not defined or participant.external_org.skip_pod_check is not defined or participant.external_org.skip_pod_check == 'false'
 
 ############################################################################################
 # This task creates the generate_block.sh file for new organizations
