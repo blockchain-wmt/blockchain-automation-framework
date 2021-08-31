@@ -44,7 +44,7 @@ While modifying the configuration file(`network.yaml`) for adding new organizati
           org_status: new  # new for the org
           external_org: # indicates it's an external org
             skip_anchor: true # skips anchor peer definition for the org
-            skip_check: true # skips the pod check for the org
+            skip_pod_check: true # skips the pod check/generation for the org when pod is deployed exteranlly
 ```
 
 and under `network.organizations` as

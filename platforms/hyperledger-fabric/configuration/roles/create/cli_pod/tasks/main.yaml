@@ -8,20 +8,6 @@
 # This task creates the value file for the cli pod as per requirements mentioned in 
 # network.yaml
 
-# Check if CLI pod for peer exists
-# - name: Check if CLI pod for peer with cli enabled exists
-#   k8s_info:
-#     kind: Pod
-#     namespace: "{{ org.name }}-net"
-#     kubeconfig: "{{ org.k8s.config_file }}"
-#     context: "{{ org.k8s.context }}"
-#     label_selectors:
-#       - app = cli
-#   when: 
-#   - peer.cli is defined 
-#   - peer.cli == "enabled"
-#   register: existing_cli
-
 - name: "Create Value file for CLI Pod"
   include_role:
     name: helm_component

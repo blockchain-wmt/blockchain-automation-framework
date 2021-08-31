@@ -67,8 +67,8 @@
   shell: |
     vault kv get -field=ca.crt {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/orderer/tls
   environment:
-    VAULT_ADDR: "{{ vault.url }}"
-    VAULT_TOKEN: "{{ vault.root_token }}"
+    VAULT_ADDR: "{{ org.vault.url }}"
+    VAULT_TOKEN: "{{ org.vault.root_token }}"
   loop: "{{ network.orderers }}"
   loop_control:
     loop_var: orderer
@@ -95,8 +95,8 @@
   vars:
     orderers: "{{ network.orderers }}"
   environment:
-    VAULT_ADDR: "{{ vault.url }}"
-    VAULT_TOKEN: "{{ vault.root_token }}"
+    VAULT_ADDR: "{{ org.vault.url }}"
+    VAULT_TOKEN: "{{ org.vault.root_token }}"
   when: orderer_certs_result.results[0].failed == True
   tags:
     - notest

@@ -1,8 +1,13 @@
 ###########################################################################################
 # This task calls valuefile to generate the create-channel files
 ############################################################################################
-- name: Fetch Orderer certificates
-  include_tasks: fetch_orderer_certs.yaml
+- name: Setup Orderer certificates
+  include_tasks: setup_orderer_certs.yaml
+  vars:
+    org_query: "organizations[?name=='{{participant.name}}']"
+    org: "{{ network | json_query(org_query) | first }}"
+    component_name: "{{ org.name | lower}}-net"
+    component_type: "{{ org.type | lower}}"
   loop: "{{ participants }}"
   loop_control:
     loop_var: participant
