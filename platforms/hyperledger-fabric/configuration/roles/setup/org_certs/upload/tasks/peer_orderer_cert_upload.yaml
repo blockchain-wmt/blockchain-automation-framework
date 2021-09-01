@@ -1,0 +1,26 @@
+- name: ensure orderer ca cert file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ orderer.name | lower }}-net/ca/ca.crt.pem"
+  register: check_file
+  failed_when: check_file.stat.exists == false
+
+- name: check if the org peer certificate exists already
+  shell: |
+    vault kv get -field=ca.crt {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/orderer/tls
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  register: peer_orderer_cert_check
+  ignore_errors: yes
+  changed_when: false
+
+# this task upload the certificates to vault
+- name: upload peer orderer tls certificates to vault when certificate is missing
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/orderer/tls ca.crt="$(cat {{ certPath }}/ca.crt.pem)" 
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  vars:
+    certPath: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ orderer.name | lower }}-net/ca"
+  when: peer_orderer_cert_check.failed == True

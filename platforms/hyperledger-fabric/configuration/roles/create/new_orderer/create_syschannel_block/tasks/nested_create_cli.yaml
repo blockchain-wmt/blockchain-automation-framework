@@ -21,7 +21,7 @@
     storage_class: "{{ org.name }}sc"
     release_dir: "{{ build_path }}"
     orderer_component: "{{ orderer.name | lower }}.{{ component_ns }}"
-    orderer_address: "{{ orderer.name | lower }}.{{ org.external_url_suffix }}:8443"
+    orderer_address: "{{ orderer.name | lower }}.{{ component_ns }}.{{ org.external_url_suffix }}:8443"
 
 
 # Start the cli using the value file created in the previous step
@@ -60,7 +60,7 @@
     ORDERER_CA: "/opt/gopath/src/github.com/hyperledger/fabric/crypto/orderer/tls/ca.crt"
   vars: 
     kubernetes: "{{ org.k8s }}"
-    ordererAddress: "{{ orderer.name | lower }}.{{ org.external_url_suffix }}:8443"
+    ordererAddress: "{{ orderer.name | lower }}.{{ component_ns }}.{{ org.external_url_suffix }}:8443"
 
 ############################################################################################
 # fetch the latest block from the blockchain
@@ -74,4 +74,4 @@
     ORDERER_CA: "/opt/gopath/src/github.com/hyperledger/fabric/crypto/orderer/tls/ca.crt"
   vars: 
     kubernetes: "{{ org.k8s }}"
-    ordererAddress: "{{ orderer.name | lower }}.{{ org.external_url_suffix }}:8443"
+    ordererAddress: "{{ orderer.name | lower }}.{{ component_ns }}.{{ org.external_url_suffix }}:8443"

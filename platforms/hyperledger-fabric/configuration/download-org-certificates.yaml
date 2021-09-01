@@ -12,7 +12,7 @@
 
     - name: Download org certificates from vault
       include_role:
-        name: "setup/org_certs_download"
+        name: "setup/org_certs/download"
       loop: "{{ network['organizations'] }}"
       vars:
         orgCertsDir: "{{ organization.orgCertsDir }}"
