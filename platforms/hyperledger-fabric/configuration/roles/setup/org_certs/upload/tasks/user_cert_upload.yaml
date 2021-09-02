@@ -1,0 +1,46 @@
+- name: ensure user msp file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/{{ username }}/msp/{{ item }}"
+  with_items:
+    - admincerts.pem
+    - cacerts.pem
+    - tlscacerts.pem
+  register: check_files
+
+- name: check file exists status
+  set_fact:
+    cert_missing: true
+  loop: "{{ check_files.results }}"
+  loop_control:
+    loop_var: result
+  when:
+    - result.stat.exists == false
+
+- name: missing certificate(s) (admincerts.pem, cacerts.pem, tlscacerts.pem)
+  debug:
+    msg: "Missing certificates in directory for user {{ username }}"
+  when:
+    - cert_missing | default(None) != None
+
+- name: check if the org user certificate exists already
+  shell: |
+    vault kv get -field=cacerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/{{ username }}/msp
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  register: user_msp_cert_check
+  ignore_errors: yes
+  changed_when: false
+
+# this task upload the certificates to vault
+- name: upload user msp certificates to vault when certificate is missing
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/{{ username }}/msp admincerts="$(cat {{ certPath }}/admincerts.pem)" cacerts="$(cat {{ certPath }}/cacerts.pem)" tlscacerts="$(cat {{ certPath }}/tlscacerts.pem)" 
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  vars:
+    certPath: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users/{{ username }}/msp"
+  when: 
+    - cert_missing | default(None) == None
+    - user_msp_cert_check.failed == True

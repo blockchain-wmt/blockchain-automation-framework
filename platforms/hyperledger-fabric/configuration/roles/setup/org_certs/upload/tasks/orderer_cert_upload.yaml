@@ -1,0 +1,26 @@
+# this task ensures the necessary admin msp certificates exist
+- name: ensure orderer ca cert file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp/tlscacerts.pem"
+  register: check_file
+  failed_when: check_file.stat.exists == false
+
+- name: check if the orderer certificate exists already
+  shell: |
+    vault kv get -field=tlscacerts {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  register: orderer_cert_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: upload orderer cert to vault for org orderer
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp tlscacerts="$(cat {{ certPath }}/tlscacerts.pem)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  vars:
+    certPath: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp"
+  when: orderer_cert_check.failed == True

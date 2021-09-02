@@ -81,7 +81,7 @@ metadata:
     ingress.kubernetes.io/ssl-passthrough: "true"  
 spec:
   rules:
-  - host: {{ $.Values.orderer.name }}.{{ $.Values.proxy.external_url_suffix }}
+  - host: {{ $.Values.orderer.name }}.{{ $.Values.metadata.namespace }}.{{ $.Values.proxy.external_url_suffix }}
     http:
       paths:
       - path: /

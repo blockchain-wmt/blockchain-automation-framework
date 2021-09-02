@@ -1,0 +1,58 @@
+#############################################################################################
+# This role upload the org MSP related certificates to vault
+#############################################################################################
+- name: upload peer certs to vault
+  include_tasks: peer_cert_upload.yaml
+  loop: "{{ organization.components }}"
+  loop_control:
+    loop_var: peer
+  when: organization.type == "peer"
+
+# checks all the username in the certificate directory
+- name: check username in the certificate directory
+  find:
+    path: ["{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/users"]
+    file_type: directory
+    recurse: no
+  register: user_dirs
+  when: organization.type == "peer"
+
+- name: upload user certs to vault
+  include_tasks: user_cert_upload.yaml
+  loop: "{{ user_dirs.files | map(attribute='path') | list }}"
+  loop_control:
+    loop_var: user_full_path
+  vars:
+    username: "{{ user_full_path | basename }}"
+  when: organization.type == "peer"
+
+- name: upload orderer cert for the peer to vault
+  include_tasks: peer_orderer_cert_upload.yaml
+  vars:
+    orderer_query: "organizations[?type=='orderer']"
+    orderers: "{{ network | json_query(orderer_query) }}"
+  loop: "{{ orderers }}"
+  loop_control:
+    loop_var: orderer
+  when: organization.type == "peer"  
+
+# this task uploads endorsers certificates for the creator orgs
+- name: upload endorser certificate(s)
+  include_tasks: endorser_cert_upload.yaml
+  vars:
+    org_query: "organizations[?type=='peer']"
+    endorsers: "{{ network | json_query(org_query) }}"
+  loop: "{{ endorsers }}"
+  loop_control:
+    loop_var: endorser
+  when: organization.type == "peer"
+
+# this task upload orderer ca cert to vault
+- name: upload orderer ca cert to vault
+  include_tasks: orderer_cert_upload.yaml
+  loop: "{{ organization.components }}"
+  loop_control:
+    loop_var: orderer
+  vars:
+    org_ns: "{{ organization.name | lower }}-net"
+  when: organization.type == "orderer"

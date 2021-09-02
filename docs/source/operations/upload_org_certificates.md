@@ -19,30 +19,20 @@ While modifying the configuration file(`network.yaml`) for downloading certifica
 
     # network config for upload certificate
     network:
-      channels: # if channels is defined, orderer/endorsers certificates will be uploaded
-        - channel:
-          orderer: # if orderer is defined, orderer cacert will be uploaded
-            name: 
-          participants:
-            - organization:
-              name: 
-          endorsers: # if endorsers is defined, endorsers admin msp cacert will be uploaded
-            name:
-            -
-            -
       organizations:
         - organization:
           name: 
-          type: peer
-          orgCertsDir: # certificates directory
+          type: # orderer / peer
+          orgCertsDir: # directory that certificates to be downloaded to
           vault:
             url: 
             root_token: 
+          components:  # list of peer names or orderer names
+            - peer0
 
 
 
----
-Sample folder structure:
+Sample file structure in the defined directory:
 
 ```
 `-- crypto

@@ -1,0 +1,19 @@
+# checks all the username in the certificate directory
+- name: check username in the certificate directory
+  find:
+    path: ["{{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser.name | lower }}-net/users"]
+    file_type: directory
+    recurse: no
+  register: endorser_user_dirs
+  when: endorser.type == "peer"
+
+
+- name: ensure user cacert file exists
+  include_tasks: nested_endorser_cert_upload.yaml
+  loop: "{{ endorser_user_dirs.files | map(attribute='path') | list }}"
+  loop_control:
+    loop_var: user_full_path
+  vars:
+    username: "{{ user_full_path | basename }}"
+    endorser_name : "{{ endorser.name | lower }}"
+  when: organization.type == "peer"

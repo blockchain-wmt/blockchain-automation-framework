@@ -1,0 +1,31 @@
+# checks all the username in the certificate directory
+- name: ensure user cacert file exists
+  stat:
+    path: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser_name }}-net/users/{{ username }}/msp/cacerts.pem"
+  register: file_checks
+  failed_when: file_checks.stat.exists == false
+  when: organization.type == "peer"
+
+- name: check if the org user certificate exists already
+  shell: |
+    vault kv get -field=cacerts {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/endorsers/{{ endorser_name }}/users/{{ username }}/msp
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  register: endorser_msp_cert_check
+  ignore_errors: yes
+  changed_when: false
+  when: organization.type == "peer"
+
+
+- name: upload admin cacert to vault for endorser if not exists
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower}}-net/endorsers/{{ endorser_name }}/users/{{ username }}/msp cacert="$(cat {{ certPath }}/cacerts.pem)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  vars:
+    certPath: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser_name }}-net/users/{{ username }}/msp"
+  when: 
+    - organization.type == "peer"
+    - endorser_msp_cert_check.failed == True
