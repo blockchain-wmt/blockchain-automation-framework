@@ -23,4 +23,6 @@
     VAULT_TOKEN: "{{ vault.root_token }}"
   vars:
     certPath: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ orderer.name | lower }}-net/ca"
-  when: peer_orderer_cert_check.failed == True
+  when: peer_orderer_cert_check.failed == True or (organization.orgCerts.forceUpdate is defined and organization.orgCerts.forceUpdate == 'true')
+
+# TODO: replace value for particular key and save it back, avoid key getting removed by mistake.

@@ -20,7 +20,7 @@
 
 - name: upload admin cacert to vault for endorser if not exists
   shell: |
-    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower}}-net/endorsers/{{ endorser_name }}/users/{{ username }}/msp cacert="$(cat {{ certPath }}/cacerts.pem)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ organization.name | lower}}-net/endorsers/{{ endorser_name }}/users/{{ username }}/msp cacerts="$(cat {{ certPath }}/cacerts.pem)"
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
@@ -28,4 +28,6 @@
     certPath: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ endorser_name }}-net/users/{{ username }}/msp"
   when: 
     - organization.type == "peer"
-    - endorser_msp_cert_check.failed == True
+    - endorser_msp_cert_check.failed == True or (organization.orgCerts.forceUpdate is defined and organization.orgCerts.forceUpdate == 'true')
+
+# TODO: replace value for particular key and save it back, avoid key getting removed by mistake.

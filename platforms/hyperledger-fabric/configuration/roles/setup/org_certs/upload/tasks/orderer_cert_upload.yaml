@@ -17,10 +17,12 @@
 
 - name: upload orderer cert to vault for org orderer
   shell: |
-    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp tlscacerts="$(cat {{ certPath }}/tlscacerts.pem)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp tlscacerts="$(cat {{ certPath }}/tlscacerts.pem)"
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
   vars:
     certPath: "{{ orgCertsDir }}/crypto/ordererOrganizations/{{ org_ns }}/orderers/{{ orderer }}.{{ org_ns }}/msp"
-  when: orderer_cert_check.failed == True
+  when: orderer_cert_check.failed == True or (organization.orgCerts.forceUpdate is defined and organization.orgCerts.forceUpdate == 'true')
+
+# TODO: replace value for particular key and save it back, avoid key getting removed by mistake.

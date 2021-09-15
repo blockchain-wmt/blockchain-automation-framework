@@ -22,46 +22,48 @@ While modifying the configuration file(`network.yaml`) for downloading certifica
         - organization:
           name: 
           type: # orderer / peer
-          orgCertsDir: # directory that certificates to be downloaded to
+          orgCerts:
+            path:  # directory to store the certificates
           vault:
             url: 
             root_token: 
-          components:  # list of peer names or orderer names
+          components:  # list of peer names or orderer names	
             - peer0
 
-orgCertsDir need to be present in the organization which you want to download the certificates, otherwise it will be skipped.
+Sample file structure in the defined directory (orgCerts.path):	
 
-Sample file structure in the defined directory (orgCertsDir):
+```	
+`-- crypto	
+    |-- ordererOrganizations	
+    |   |-- intord-net	
+    |   |   |-- ca	
+    |   |   |   `-- ca.crt.pem	
+    |   |   `-- orderers	
+    |   |       `-- intord1.intord-net	
+    |   |           `-- msp	
+    |   |               `-- tlscacerts.pem	
+    |   `-- orderer-net	
+    |       `-- orderer	
+    |           `-- ca.crt.pem	
+    `-- peerOrganizations	
+        |-- carrier-net	
+        |   |-- peers	
+        |   |   |-- peer0.carrier-net	
+        |   |   |   `-- msp	
+        |   |   |       `-- tlscacerts.pem	
+        |   |   `-- peer1.carrier-net	
+        |   |       `-- msp	
+        |   |           `-- tlscacerts.pem	
+        |   `-- users	
+        |       `-- admin	
+        |           `-- msp	
+        |               |-- admincerts.pem	
+        |               |-- cacerts.pem	
+        |               `-- tlscacerts.pem	
+```	
 
-```
-`-- crypto
-    |-- ordererOrganizations
-    |   |-- intord-net
-    |   |   |-- ca
-    |   |   |   `-- ca.crt.pem
-    |   |   `-- orderers
-    |   |       `-- intord1.intord-net
-    |   |           `-- msp
-    |   |               `-- tlscacerts.pem
-    |   `-- orderer-net
-    |       `-- orderer
-    |           `-- ca.crt.pem
-    `-- peerOrganizations
-        |-- carrier-net
-        |   |-- peers
-        |   |   |-- peer0.carrier-net
-        |   |   |   `-- msp
-        |   |   |       `-- tlscacerts.pem
-        |   |   `-- peer1.carrier-net
-        |   |       `-- msp
-        |   |           `-- tlscacerts.pem
-        |   `-- users
-        |       `-- admin
-        |           `-- msp
-        |               |-- admincerts.pem
-        |               |-- cacerts.pem
-        |               `-- tlscacerts.pem
-```
+
+orgCerts.path need to be present in the organization which you want to download the certificates, otherwise it will be skipped.
 
 <a name = "run-playbook"></a>
 ## Run playbook
