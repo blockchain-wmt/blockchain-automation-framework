@@ -15,11 +15,11 @@
         name: "setup/org_certs/download"
       loop: "{{ network['organizations'] }}"
       vars:
-        orgCertsDir: "{{ organization.orgCertsDir }}"
+        orgCertsDir: "{{ organization.orgCerts.path }}"
         vault: "{{ organization.vault }}"
       loop_control:
         loop_var: organization
-      when: organization.orgCertsDir is defined
+      when: organization.orgCerts is defined and organization.orgCerts.path is defined
 
   vars: #These variables can be overriden from the command line
     privilege_escalate: false           #Default to NOT escalate to root privledges

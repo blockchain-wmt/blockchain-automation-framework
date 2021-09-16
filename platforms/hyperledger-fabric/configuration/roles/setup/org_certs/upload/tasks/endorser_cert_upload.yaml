@@ -17,3 +17,4 @@
     username: "{{ user_full_path | basename }}"
     endorser_name : "{{ endorser.name | lower }}"
   when: organization.type == "peer"
+

@@ -19,20 +19,34 @@ While modifying the configuration file(`network.yaml`) for downloading certifica
 
     # network config for upload certificate
     network:
+      channels: # if channels is defined, orderer/endorsers certificates will be uploaded
+        - channel:
+          orderer: # if orderer is defined, orderer cacert will be uploaded
+            name: 
+          participants:
+            - organization:
+              name: 
+          endorsers: # if endorsers is defined, endorsers admin msp cacert will be uploaded
+            name:
+            -
+            -
       organizations:
         - organization:
           name: 
-          type: # orderer / peer
-          orgCertsDir: # directory that certificates to be downloaded to
+          type: peer
+          orgCerts:
+            path: # certificates directory
+            forceUpdate: # if it's true, force update the certificate for this org. otherwise if the certificates exists in vault already, update will be ignored.
           vault:
             url: 
             root_token: 
-          components:  # list of peer names or orderer names
+          components:  # list of peer names or orderer names	
             - peer0
 
 
 
-Sample file structure in the defined directory:
+---
+Sample folder structure:
 
 ```
 `-- crypto
@@ -64,7 +78,7 @@ Sample file structure in the defined directory:
         |               `-- tlscacerts.pem
 ```
 
-orgCertsDir need to be present in the organization which you want to upload the certificates, otherwise it will be skipped.
+orgCerts.path need to be present in the organization which you want to upload the certificates, otherwise it will be skipped.
 
 <a name = "run-playbook"></a>
 ## Run playbook

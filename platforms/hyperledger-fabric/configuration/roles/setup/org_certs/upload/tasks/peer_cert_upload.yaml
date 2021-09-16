@@ -43,4 +43,6 @@
     certPath: "{{ orgCertsDir }}/crypto/peerOrganizations/{{ organization.name | lower }}-net/peers/{{ peer }}.{{ organization.name | lower }}-net/msp"
   when: 
     - cert_missing | default(None) == None
-    - peer_msp_cert_check.failed == True
+    - peer_msp_cert_check.failed == True or (organization.orgCerts.forceUpdate is defined and organization.orgCerts.forceUpdate == 'true')
+
+# TODO: replace value for particular key and save it back, avoid key getting removed by mistake.

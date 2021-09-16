@@ -33,7 +33,7 @@
         ca: "{{ item.services.ca }}"
       loop: "{{ network['organizations'] }}"
       when:
-        - external_chaincode == true
+        - external_chaincode == 'true'
 
     ############################################################################################
     # Check if CA CLI is available
@@ -53,7 +53,7 @@
         ca: "{{ item.services.ca }}"
       loop: "{{ network['organizations'] }}"
       when: 
-        - external_chaincode == true
+        - external_chaincode == 'true'
 
     ############################################################################################
     # This task generates the crypto material by executing the generate-crypto-peer-chaincode.sh script 
@@ -74,7 +74,7 @@
       loop: "{{ network['organizations'] }}"
       when: 
         - item.type == 'peer'
-        - external_chaincode == true
+        - external_chaincode == 'true'
 
     ############################################################################################
     # This task generates the crypto material by executing the generate-crypto-chaincode-server.sh script
@@ -95,7 +95,7 @@
       loop: "{{ network['organizations'] }}"
       when: 
         - item.type == 'peer'
-        - external_chaincode == true
+        - external_chaincode == 'true'
 
     ############################################################################################
     # This task installs the external chaincode on the desired peers
@@ -122,7 +122,7 @@
       when: 
         - item.type == 'peer'
         - item.org_status == 'new' 
-        - external_chaincode == true
+        - external_chaincode == 'true'
 
     - name: Install chaincode
       include_role:
@@ -133,7 +133,7 @@
       when: 
         - item.type == 'peer'
         - item.org_status == 'new'
-        - external_chaincode == false
+        - external_chaincode == 'false'
 
   vars: #These variables can be overriden from the command line
     privilege_escalate: false           #Default to NOT escalate to root privledges
@@ -141,4 +141,4 @@
     install_arch:  "amd64"              #Default to amd64 architecture
     bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries
     add_new_org: 'false'                # Default to false as this is for main network creation
-    external_chaincode: false                # Default to false 
+    external_chaincode: 'false'                # Default to false 
