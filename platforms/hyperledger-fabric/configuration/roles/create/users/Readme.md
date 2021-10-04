@@ -7,7 +7,7 @@ This role generates and updates users and thier enrollment certificates for peer
 This task copies the generate-user-crypto.sh from scripts folder to  specified destination folder
 
 #### 2. Changing the permission of msp files
-This task chnages the permission required for creating msp files
+This task changes the permission required for creating msp files
 
 #### 3. Copy generate_crypto.sh file using the CA Tools
 This task pushes the above file to CA CLI Pod.
