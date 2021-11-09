@@ -36,6 +36,12 @@ spec:
       - name: certificates
         emptyDir:
           medium: Memory
+      {{ if .Values.chaincode.pdc.enabled }}
+      - name: pdcconfig
+        configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-collections-config
+      {{ end }}
       initContainers:
       - name: certificates-init
         image: {{ $.Values.metadata.images.alpineutils }}
@@ -200,9 +206,14 @@ spec:
           done
 
           echo ${COMMIT_CMD}
-          echo  "chaincode collection config path: ${COLLECTIONS_CONFIG}"
-          if [ -n "${COLLECTIONS_CONFIG}" ]
+          if [ "${PDC_ENABLED}" = "true" ]
           then
+            pdc_config=" --collections-config /opt/pdc/collections_config.json"
+            COMMIT_CMD=${COMMIT_CMD}${pdc_config}
+            COMMITREADINESS_CMD=${COMMITREADINESS_CMD}${pdc_config}
+          elif [ -n "${COLLECTIONS_CONFIG}" ]
+          then
+            echo  "chaincode collection config path: ${COLLECTIONS_CONFIG}"
             ## Git repository clone for private data collection config
             mkdir -p /root/.ssh/
             ssh-keyscan {{ $.Values.chaincode.repository.hostname }} > /root/.ssh/known_hosts
@@ -221,9 +232,10 @@ spec:
             collection_config=" --collections-config  ${CONFIG_SRC_PATH}"
             COMMIT_CMD=${COMMIT_CMD}${collection_config} 
             COMMITREADINESS_CMD=${COMMITREADINESS_CMD}${collection_config}
-            echo "Commit Readiness command post collection config " ${COMMITREADINESS_CMD}
-            echo "Commit command post collection config " ${COMMIT_CMD}
           fi
+
+          echo "Commit Readiness command post collection config " ${COMMITREADINESS_CMD}
+          echo "Commit command post collection config " ${COMMIT_CMD}
 
           if [ -z ${ENDORSEMENT_POLICIES} ]
           then
@@ -287,7 +299,13 @@ spec:
           value: "{{ $.Values.endorsers.name }}"
         - name: COLLECTIONS_CONFIG
           value: "{{ $.Values.chaincode.repository.collectionsconfig }}" 
+        - name: PDC_ENABLED
+          value: "{{ $.Values.chaincode.pdc.enabled }}"
         volumeMounts:
         - name: certificates
           mountPath: /opt/gopath/src/github.com/hyperledger/fabric/crypto
           readOnly: true
+        {{ if .Values.chaincode.pdc.enabled }}
+        - name: pdcconfig
+          mountPath: /opt/pdc
+        {{ end }}

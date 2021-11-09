@@ -93,7 +93,9 @@ chaincode:
   #Provide the endorsement policies for the chaincode
   #Eg.endorsementpolicies: "OR('Org1MSP.peer', 'Org2MSP.peer')"
   endorsementpolicies:
-
+  pdc:
+    enabled:
+    collectionsconfig:
 
 channel:
   #Provide the name of the channel

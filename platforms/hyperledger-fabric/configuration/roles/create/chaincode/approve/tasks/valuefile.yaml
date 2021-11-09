@@ -34,6 +34,27 @@
   set_fact:
     approve_chaincode: "{{ result }}"
 
+- name: "validate pdc config"
+  fail:
+    msg: "peer.chaincode.pdc.collections_config is invalid"
+  when:
+    - peer.chaincode.pdc is defined
+    - peer.chaincode.pdc.enabled
+    - (peer.chaincode.pdc.collections_config is not defined) or (peer.chaincode.pdc.collections_config | length == 0)
+
+- name: "check if pdc collection config file exists"
+  stat:
+    path: "{{ peer.chaincode.pdc.collections_config }}"
+  loop: "{{ org.services.peers }}"
+  loop_control:
+    loop_var: peer
+  register: check_file
+  failed_when: check_file.stat.exists == false
+  when:
+    - peer.chaincode.pdc is defined
+    - peer.chaincode.pdc.enabled
+    - peer.chaincode.pdc.collections_config is defined
+
 # Nested task for chanincode approve
 - name: "Create value file for chaincode approve"
   include_role:
@@ -53,6 +74,7 @@
     alpine_image: "{{ docker_url }}/alpine-utils:1.0"
     component_chaincode: "{{ peer.chaincode }}"
     values_dir: "{{playbook_dir}}/../../../{{org.gitops.release_dir}}/{{ org.name | lower }}"
+    pdc_config_content: "{{ lookup('file', '{{ peer.chaincode.pdc.collections_config }}')}}"
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer

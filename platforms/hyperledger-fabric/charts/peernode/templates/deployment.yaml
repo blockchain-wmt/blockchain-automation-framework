@@ -150,6 +150,13 @@ spec:
       containers:
       - name: couchdb
         image: {{ $.Values.metadata.images.couchdb }}
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+          limits:
+            memory: "1.5Gi"
+            cpu: "0.7"
         command: ["sh", "-c"]
         args:
         - |-
@@ -269,9 +276,20 @@ spec:
             - key: core.yaml
               path: core.yaml
       {{ end }}
-      - name: datadir
-        persistentVolumeClaim:
-          claimName: {{ $.Values.peer.name }}-peer-volume     
-      - name: datadir-couchdb
-        persistentVolumeClaim:
-          claimName: {{ $.Values.peer.name }}-db-volume
+  volumeClaimTemplates:
+    - metadata:
+        name: datadir-couchdb
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.storage.couchdb.storageclassname }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.couchdb.storagesize }}
+    - metadata:
+        name: datadir
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.storage.peer.storageclassname }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.peer.storagesize }}

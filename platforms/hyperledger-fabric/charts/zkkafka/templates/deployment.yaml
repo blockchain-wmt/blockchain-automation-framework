@@ -64,6 +64,8 @@ metadata:
     {{- include "labels.custom" . | nindent 2 }}
 spec:
   serviceName: "{{ $.Values.kafka.brokerservicename }}"
+  updateStrategy:
+    type: RollingUpdate
   replicas: {{ $.Values.kafka.replicas }}
   selector:
     matchLabels:
@@ -142,12 +144,12 @@ spec:
         - name: datadir
           mountPath: /var/lib/kafka
   volumeClaimTemplates:
-  - metadata:
-      name: datadir
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: {{ $.Values.storage.storagesize }}
+    - metadata:
+        name: datadir
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ $.Values.storage.storagesize }}
 
 

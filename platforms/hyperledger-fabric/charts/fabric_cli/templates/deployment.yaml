@@ -1,9 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Values.peer.name }}-cli
   namespace: {{ .Values.metadata.namespace }}
 spec:
+  serviceName: {{ .Values.peer.name }}-cli
+  updateStrategy:
+    type: RollingUpdate
   replicas: 1
   selector:
     matchLabels:
@@ -17,9 +20,6 @@ spec:
       imagePullSecrets:
         - name: {{ $.Values.vault.imagesecretname }}
       volumes:
-      - name: {{ .Values.peer.name }}-cli-pv
-        persistentVolumeClaim:
-          claimName: {{ .Values.peer.name }}-cli-pvc
       {{ if .Values.vault.tls  }}
       - name: vaultca
         secret:
@@ -28,6 +28,8 @@ spec:
           - key: ca.crt.pem
             path: ca-certificates.crt
       {{ end  }}
+      - name: {{ $.Values.peer.name }}-cli-pv
+        emptyDir: {}
       - name: certificates
         emptyDir:
           medium: Memory

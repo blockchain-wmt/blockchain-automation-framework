@@ -51,8 +51,17 @@ spec:
 {% if component_chaincode.repository.collections_config is defined %}
         collectionsconfig:  {{ component_chaincode.repository.collections_config }} 
 {% else %}
-        collectionsconfig:  ''
+        collectionsconfig:  ""
 {% endif %}
+{% endif %}
+{% if peer.chaincode.pdc is defined and peer.chaincode.pdc.enabled %}
+      pdc:
+        enabled: true
+        collectionsconfig: "{{ lookup('file', '{{ peer.chaincode.pdc.collections_config }}') | b64encode }}"
+{% else %}
+      pdc:
+        enabled: false
+        collectionsconfig: ""
 {% endif %}
     channel:
       name: {{ item.channel_name | lower }}
