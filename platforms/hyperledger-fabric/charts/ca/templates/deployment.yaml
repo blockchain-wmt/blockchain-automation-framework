@@ -1,6 +1,6 @@
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ $.Values.server.name }}
   namespace: {{ $.Values.metadata.namespace }}
@@ -11,6 +11,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }} 
     {{- include "labels.custom" . | nindent 2 }}
 spec:
+  serviceName: {{ $.Values.server.name }}
+  updateStrategy:
+    type: RollingUpdate
   replicas: 1
   selector:
     matchLabels:
@@ -31,9 +34,6 @@ spec:
       imagePullSecrets:
         - name: {{ $.Values.vault.imagesecretname }}
       volumes:
-      - name: ca-server-db
-        persistentVolumeClaim:
-          claimName: ca-server-db-pvc
       - name: certificates
         emptyDir:
           medium: Memory
@@ -178,4 +178,12 @@ spec:
           mountPath: /var/hyperledger/fabric-ca-server/db/
         - name: {{ $.Values.server.name }}-config-volume
           mountPath: /custom-config/
-          
+  volumeClaimTemplates:
+    - metadata:
+        name: ca-server-db
+      spec:
+        storageClassName: {{ $.Values.storage.storageclassname }}
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ $.Values.storage.storagesize }}

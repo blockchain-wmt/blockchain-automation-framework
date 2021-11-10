@@ -1,6 +1,6 @@
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Values.metadata.name }}
   namespace: {{ .Values.metadata.namespace }}
@@ -11,6 +11,9 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  serviceName: {{ .Values.metadata.name }}
+  updateStrategy:
+    type: RollingUpdate
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -33,9 +36,7 @@ spec:
           - mountPath: /crypto-config
             name: ca-tools-crypto-pv
       volumes:
-      - name: ca-tools-pv
-        persistentVolumeClaim:
-          claimName: ca-tools-pvc
-      - name: ca-tools-crypto-pv
-        persistentVolumeClaim:
-          claimName: ca-tools-crypto-pvc
+        - name: ca-tools-crypto-pv
+          emptyDir: {}
+        - name: ca-tools-pv
+          emptyDir: {}

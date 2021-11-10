@@ -213,6 +213,13 @@ spec:
       containers:
       - name: {{ $.Values.orderer.name }}
         image: {{ $.Values.metadata.images.orderer }}
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+          limits:
+            memory: "2Gi"
+            cpu: "0.7"
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric
         command: ["sh", "-c"]
         args:
@@ -261,12 +268,12 @@ spec:
           mountPath: /var/hyperledger/orderer/crypto
           readOnly: true
   volumeClaimTemplates:
-  #Lables are not being taken by Kubernetes as it dynamically creates PVC
-  - metadata:
-      name: datadir    
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: {{ $.Values.storage.storageclassname }}
-      resources:
-        requests:
-          storage: {{ $.Values.storage.storagesize }}
+    #Lables are not being taken by Kubernetes as it dynamically creates PVC
+    - metadata:
+        name: datadir    
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ $.Values.storage.storageclassname }}
+        resources:
+          requests:
+            storage: {{ $.Values.storage.storagesize }}

@@ -173,7 +173,15 @@ Refer [this guide](./custom_core_yaml_peer.md) for details on editing the core.y
                 external_chaincode:
                 tls_disabled: 
                 buildpack_path: 
-                image: 
+                image:
+                pdc: # private data collection config
+                  enabled:  # true/false
+                  collections_config: # path to the config file
+                private_registry: # true/false, this allows kubernetes to pull image from private registry, such as github.
+                registry:
+                  server:
+                  username:
+                  password:
                 crypto_mount_path: 
           ..
           .. 
