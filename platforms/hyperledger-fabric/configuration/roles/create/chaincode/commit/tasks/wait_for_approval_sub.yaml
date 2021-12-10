@@ -7,4 +7,4 @@
     component_type: "Job"
     namespace: "{{ org.name |lower }}-net"
     kubernetes: "{{ org.k8s }}"
-    component_name: "approvechaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
+    component_name: "ap-{{ item.channel_name|lower }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"

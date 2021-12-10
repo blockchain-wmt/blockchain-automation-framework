@@ -1,11 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: approvechaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
+  name: ap-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
   namespace: {{ $.Values.metadata.namespace }}
   labels:
-    app: approvechaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
-    app.kubernetes.io/name: approvechaincode-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
+    app: ap-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
+    app.kubernetes.io/name: ap-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -15,8 +15,8 @@ spec:
   template:
     metadata:
       labels:
-        app: approvechaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
-        app.kubernetes.io/name: approvechaincode-{{ $.Values.chaincode.name }}{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
+        app: ap-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
+        app.kubernetes.io/name: ap-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.sequence }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
@@ -143,7 +143,7 @@ spec:
         - name: certificates
           mountPath: /secret
       containers:
-      - name: approvechaincode
+      - name: approve-chaincode
         image: {{ $.Values.metadata.images.fabrictools }}
         imagePullPolicy: Always
         stdin: true

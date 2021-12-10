@@ -6,7 +6,7 @@
   vars:
     job_title: "install_external_chaincode"
     component_type: "OneTimeJob"
-    component_name: "installextchaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}"
+    component_name: "instextcc-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version | replace('.','-')}}"
 
 - name: "Set Variable install_chaincode"
   set_fact:
@@ -34,7 +34,7 @@
     type: "install_external_chaincode_job"
     peer_name: "{{ peer.name }}"
     peer_address: "{{ peer.name }}.{{ namespace }}:{{ peer.grpc.port }}"
-    component_name: "chaincode-ext-install-{{ name }}-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version | replace('.','-')}}"
+    component_name: "instextcc-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version | replace('.','-')}}"
     component_chaincode: "{{ peer.chaincode }}"
     fabrictools_image: "hyperledger/fabric-tools:{{ network.version }}"
     alpine_image: "{{ docker_url }}/alpine-utils:1.0"

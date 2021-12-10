@@ -1,11 +1,11 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: installextchaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
+  name: instextcc-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
   namespace: {{ $.Values.metadata.namespace }}
   labels:
-    app: installextchaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
-    app.kubernetes.io/name: installextchaincode-{{ $.Values.chaincode.name }}{{ $.Values.chaincode.version }}
+    app: instextcc-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
+    app.kubernetes.io/name: instextcc-{{ $.Values.chaincode.name }}{{ $.Values.chaincode.version }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -15,8 +15,8 @@ spec:
   template:
     metadata:
       labels:
-        app: installextchaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
-        app.kubernetes.io/name: installextchaincode-{{ $.Values.chaincode.name }}{{ $.Values.chaincode.version }}
+        app: instextcc-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}
+        app.kubernetes.io/name: instextcc-{{ $.Values.chaincode.name }}{{ $.Values.chaincode.version }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/managed-by: {{ .Release.Service }}
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -214,7 +214,7 @@ spec:
           mountPath: /chaincodepackage
           readOnly: false
       containers:
-      - name: installextchaincode
+      - name: instextcc
         image: {{ $.Values.metadata.images.fabrictools }}
         imagePullPolicy: Always
         stdin: true

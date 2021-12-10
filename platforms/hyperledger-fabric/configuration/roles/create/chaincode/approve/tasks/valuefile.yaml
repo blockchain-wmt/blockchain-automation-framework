@@ -10,7 +10,7 @@
     component_type: "Job"
     namespace: "{{ org.name |lower }}-net"
     kubernetes: "{{ org.k8s }}"
-    component_name: "{{ 'installchaincode' if peer.chaincode is defined and ( peer.chaincode.external_chaincode is undefined or peer.chaincode.external_chaincode == false ) else 'installextchaincode' }}-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}"
+    component_name: "{{ 'installchaincode' if peer.chaincode is defined and ( peer.chaincode.external_chaincode is undefined or peer.chaincode.external_chaincode == false ) else 'instextcc' }}-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}"
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer
@@ -24,11 +24,13 @@
     component_type: "OneTimeJob"
     namespace: "{{ org.name |lower }}-net"
     kubernetes: "{{ org.k8s }}"
-    component_name: "approvechaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
+    component_name: "ap-{{ item.channel_name|lower }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
   loop: "{{ org.services.peers }}"
   loop_control:
     loop_var: peer
-  when: peer.chaincode is defined
+  when:
+    - peer.chaincode is defined
+    - peer.name == first_peer_name
 
 - name: "Set Variable approve_chaincode"
   set_fact:
@@ -62,7 +64,7 @@
   vars:    
     name: "{{ org.name | lower }}"
     type: "approve_chaincode_job"
-    component_name: "approve-{{ org.name | lower }}-{{ item.channel_name|lower }}-{{peer.name}}{{peer.chaincode.name}}{{peer.chaincode.version}}-{{ peer.chaincode.sequence | default('1') }}"
+    component_name: "ap-{{ item.channel_name|lower }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
     namespace: "{{ org.name |lower }}-net"
     peer_name: "{{ peer.name }}"
     peer_address: "{{ peer.name }}.{{ org.name |lower }}-net:{{ peer.grpc.port }}"
@@ -96,3 +98,19 @@
     GIT_RESET_PATH: "platforms/hyperledger-fabric/configuration"
     msg: "[ci skip] Pushing chaincode approve files"
   when: approve_chaincode.resources|length == 0
+
+# This task waits for chaincode to be approved
+- name: "Waiting for chaincode to be approve on {{ peer.name }}"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Job"
+    namespace: "{{ org.name |lower }}-net"
+    kubernetes: "{{ org.k8s }}"
+    component_name: "ap-{{ item.channel_name|lower }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence | default('1') }}"
+  loop: "{{ org.services.peers }}"
+  loop_control:
+    loop_var: peer
+  when:
+    - approve_chaincode.resources|length == 0
+    - peer.name == first_peer_name
