@@ -187,6 +187,15 @@ spec:
         args:
         - |-
           #!/bin/bash sh
+
+          # validate if chaincode is committed
+          COMMITTED=$(peer lifecycle chaincode querycommitted --channelID ${CHANNEL_NAME} --name ${CHAINCODE_NAME} -O json | jq --arg SEQUENCE "$CHAINCODE_SEQUENCE" --arg VERSION "$CHAINCODE_VERSION" 'select((.sequence|tostring)==$SEQUENCE and (.version|tostring)==$VERSION)')
+          if [ -n "${COMMITTED}" ]
+          then
+            echo "chaincode ${CHAINCODE_NAME} with version ${CHAINCODE_VERSION} and sequence ${CHAINCODE_SEQUENCE} is committed in channel ${CHANNEL_NAME}, skipping... "
+            exit 0
+          fi
+
           echo $COMMIT_ARGUMENTS>COMMIT_ARGUMENTS.txt
           COMMIT_ARGUMENTS=$(< COMMIT_ARGUMENTS.txt)
           COMMITREADINESS_CMD="peer lifecycle chaincode checkcommitreadiness --channelID ${CHANNEL_NAME} --name ${CHAINCODE_NAME} --version ${CHAINCODE_VERSION} --sequence ${CHAINCODE_SEQUENCE} --init-required --output json"

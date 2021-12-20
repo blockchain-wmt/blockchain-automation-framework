@@ -224,6 +224,15 @@ spec:
         - |-
           #!/bin/bash sh
           # tail -f /dev/null;
+
+          # validate if chaincode is installed
+          INSTALLED=$(peer lifecycle chaincode queryinstalled -O json | jq '.installed_chaincodes?' | jq --arg CCLABEL "${CHAINCODE_NAME}_${CHAINCODE_VERSION}" '.[]? | select(.label==$CCLABEL)')
+          if [ -n "${INSTALLED}" ]
+          then
+            echo "chaincode ${CHAINCODE_NAME}_${CHAINCODE_VERSION} is installed, skipping... "
+            exit 0
+          fi
+
           ## Installing Chaincode
           peer lifecycle chaincode install ${CHAINCODE_MOUNT_PATH}/${CHAINCODE_NAME}_${CHAINCODE_VERSION}.tgz
           echo "Chaincode installed for Fabric v.2.X"

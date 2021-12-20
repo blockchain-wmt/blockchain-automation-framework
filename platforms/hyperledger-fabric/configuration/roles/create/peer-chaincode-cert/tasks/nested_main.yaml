@@ -29,10 +29,33 @@
   when: setup_user_env is not defined or setup_user_env == true
 
 ############################################################################################
+# This task checks if the ca certificate exists in the CA Tools pod
+# /crypto-config/peerOrganizations/{{component_name}}/ca/ca.{{component_name}}-cert.pem
+- name: Check if the ca certificate exists in the CA Tools Pod
+  shell: |
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- ls /crypto-config/peerOrganizations/{{ component_name }}/ca/ca.{{ component_name }}-cert.pem
+  register: ca_file_exists
+  ignore_errors: yes
+
+- name: Download ca certificate from Vault and copy to CA Tools Pod
+  shell: |
+    mkdir -p {{ temp_peer_cert_folder }}
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    vault kv get -field=ca.{{ component_name }}-cert.pem {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/ca > {{ temp_peer_cert_folder }}/ca.{{ component_name }}-cert.pem
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- mkdir -p /crypto-config/peerOrganizations/{{ component_name }}/ca/
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ temp_peer_cert_folder }}/ca.{{ component_name }}-cert.pem {{ component_name }}/${CA_TOOL_CLI}:/crypto-config/peerOrganizations/{{ component_name }}/ca/ca.{{ component_name }}-cert.pem
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: ca_file_exists.failed == true
+
+############################################################################################
 # This task copies generate-crypto-peer-chaincode.sh file using the CA Tools Pod 
 - name: Copy generate-crypto-peer-chaincode.sh file using the CA Tools 
   shell: |
     export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- mkdir -p /root/ca-tools/{{ org_name|lower }}
     KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-peer-chaincode.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-crypto-peer-chaincode.sh  
   when: setup_user_env is not defined or setup_user_env == true
 

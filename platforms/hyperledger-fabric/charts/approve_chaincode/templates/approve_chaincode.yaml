@@ -152,6 +152,15 @@ spec:
         args:
         - |-
           #!/bin/bash sh
+
+          # validate if chaincode is approved
+          APPROVED=$(peer lifecycle chaincode queryapproved --channelID ${CHANNEL_NAME} --name ${CHAINCODE_NAME} -O json | jq --arg SEQUENCE "$CHAINCODE_SEQUENCE" --arg VERSION "$CHAINCODE_VERSION" 'select((.sequence|tostring)==$SEQUENCE and (.version|tostring)==$VERSION)')
+          if [ -n "${APPROVED}" ]
+          then
+            echo "chaincode ${CHAINCODE_NAME} with version ${CHAINCODE_VERSION} and sequence ${CHAINCODE_SEQUENCE} is approved in channel ${CHANNEL_NAME}, skipping... "
+            exit 0
+          fi
+
           echo $COMMIT_ARGUMENTS>COMMIT_ARGUMENTS.txt
           COMMIT_ARGUMENTS=$(< COMMIT_ARGUMENTS.txt)
           
