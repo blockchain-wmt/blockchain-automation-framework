@@ -165,6 +165,32 @@
     - cert_generated|default(None) == None
     - crypto_config_files.stat.exists
 
+- name: ensure chaincode certificate files exist
+  stat:
+    path: "./build/crypto-config/peerOrganizations/{{ component_name }}/users/{{peer.name}}-chaincode@{{ component_name }}/tls/{{ file }}"
+  with_items:
+    - ca.crt
+    - client.crt
+    - client.key
+  register: check_files
+  loop_control:
+    loop_var: file
+
+- name: check file exists status
+  set_fact:
+    cert_missing: true
+  loop: "{{ check_files.results }}"
+  loop_control:
+    loop_var: chaincode_cert_file
+  when:
+    - chaincode_cert_file.stat.exists == false
+
+- name: missing chaincode certificates
+  fail:
+    msg: "Missing certificates in directory for chaincode installation"
+  when:
+    - cert_missing | default(None) != None
+
 ############################################################################################
 # Copy certificates to vault
 - name: Copy certificates to vault
@@ -173,3 +199,5 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+  when:
+    - cert_missing | default(None) == None

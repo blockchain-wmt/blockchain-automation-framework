@@ -7,6 +7,7 @@
     loop_var: peer
   vars:
     first_peer_name: "{{ (services.peers | first)['name'] }}"
+    temp_peer_cert_folder: build/tmp/certs/crypto-config
   when: 
     - peer.chaincode is defined
     - peer.chaincode.external_chaincode is defined

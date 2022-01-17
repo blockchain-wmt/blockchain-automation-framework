@@ -34,6 +34,7 @@
       loop: "{{ network['organizations'] }}"
       when:
         - external_chaincode == 'true'
+        - item.type == 'peer'
 
     ############################################################################################
     # Check if CA CLI is available
@@ -54,6 +55,7 @@
       loop: "{{ network['organizations'] }}"
       when: 
         - external_chaincode == 'true'
+        - item.type == 'peer'
 
     ############################################################################################
     # This task generates the crypto material by executing the generate-crypto-peer-chaincode.sh script 
