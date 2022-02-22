@@ -50,10 +50,10 @@ This tasks checks if commit-chaincode is already run.
 ##### Input Variables
 
     kind: The kind of task i.e. here `Job`
-    name: Name of commit chaincode job. Format: commitchaincode-{{ peer.name }}-{{peer.chaincode.name}}-{{ peer.chaincode.version }}
+    name: Name of commit chaincode job. Format: cmtcc-{{ channel.name }}-{{ peer.name }}-{{peer.chaincode.name}}-{{ peer.chaincode.version }}
     namespace: Namespace of component
     label_selectors:
-      - app = commitchaincode-{{ peer.name }}-{{peer.chaincode.name}}-{{ peer.chaincode.version }}
+      - app = cmtcc-{{ channel.name }}-{{ peer.name }}-{{peer.chaincode.name}}-{{ peer.chaincode.version }}
     kubeconfig: The config file of the cluster
     context: The context of kubernetes
 ##### Output Variables

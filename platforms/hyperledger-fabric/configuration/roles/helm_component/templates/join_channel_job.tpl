@@ -1,12 +1,12 @@
 apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
-  name: joinchannel-{{ peer.name }}-{{ component_name }}
+  name: {{ component_name }}
   namespace: {{ component_ns }}
   annotations:
     fluxcd.io/automated: "false"
 spec:
-  releaseName: joinchannel-{{ peer.name }}-{{ component_name }}
+  releaseName: {{ component_name }}
   chart:
     git: {{ git_url }}
     ref: {{ git_branch }}

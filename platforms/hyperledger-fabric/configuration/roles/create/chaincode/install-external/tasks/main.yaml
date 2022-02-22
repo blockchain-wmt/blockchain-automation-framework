@@ -80,7 +80,8 @@
 - name: Fails if the package file doesn't exist
   fail:
     msg: Package doesn't exist, please check the process
-  when: packagefile.stat.exists == false
+  when: 
+    - packagefile is defined and packagefile.stat is defined and packagefile.stat.exists == false
 
 # This task saves the package details to vault in base64 format
 - name: Saves the package file to vault in base64 format
@@ -101,7 +102,8 @@
   file:
     path: "tmp/package/{{ org_ns }}"
     state: absent
-  when: packagefile.stat.exists == true
+  when: 
+    - packagefile is defined and packagefile.stat is defined and packagefile.stat.exists == true
 
 # This task installs the external chaincode details
 - name: Installs the external chaincode details
@@ -117,3 +119,15 @@
     - peer.chaincode is defined
     - peer.chaincode.external_chaincode is defined
     - peer.chaincode.external_chaincode == true  
+
+# Check or Wait if install-chaincode is already run
+- name: "Waiting for chaincode to be installed on {{ peer.name }}"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Job"
+    component_name: "{{ 'installchaincode' if peer.chaincode is defined and ( peer.chaincode.external_chaincode is undefined or peer.chaincode.external_chaincode == false ) else 'instextcc' }}-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}"
+  loop: "{{ peers }}"
+  loop_control:
+    loop_var: peer
+  when: peer.chaincode is defined

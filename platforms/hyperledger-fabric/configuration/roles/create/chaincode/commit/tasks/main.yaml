@@ -45,9 +45,9 @@
     kubernetes: "{{ org.k8s }}"
     component_type: "Job"
     namespace: "{{ org.name | lower }}-net"
-    component_name: "commitchaincode-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence }}"
+    component_name: "cmtcc-{{ item.channel_name|lower }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}-{{ peer.chaincode.sequence }}"
   loop: "{{ (item | json_query(channelcreator_query))[0:1] }}"
   loop_control:
-    loop_var: participant 
-  when: 
+    loop_var: participant
+  when:
     - peer.chaincode is defined and '2.' in network.version

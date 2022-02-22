@@ -18,7 +18,7 @@
     name: helm_component
   vars:
     name: "{{ participant.name }}"
-    type: "join_channel_job"    
+    type: "join_channel_job"
     component_name: "join-{{ channel_name }}-{{ participant.name }}-{{ peer.name }}"
     peer_name: "{{ peer.name }}"
     component_ns: "{{ participant.name | lower}}-net"

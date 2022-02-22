@@ -39,11 +39,16 @@ ORG_HOME="${HOME}/ca-tools/${ORG_NAME}"
 ORG_USER="${CHAINCODE_NAME}-${VERSION}@${FULLY_QUALIFIED_ORG_NAME}"
 ORG_USERPASS="${CHAINCODE_NAME}-${VERSION}@${FULLY_QUALIFIED_ORG_NAME}-pw"
 
+CA_ADMIN_USER="${ORG_NAME}-admin"
+CA_ADMIN_PASS="${ORG_NAME}-adminpw"
+
+fabric-ca-client enroll -d -u https://${CA_ADMIN_USER}:${CA_ADMIN_PASS}@${CA} --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
+
 # Checking if the user msp folder exists in the CA server	
 if [ ! -d "${ORG_HOME}/chaincode/${CHAINCODE_NAME}/v${VERSION}" ]; then # if user certificates do not exist
 
 	## Register and enroll User for Org
-	fabric-ca-client register -d --id.name ${ORG_USER} --id.secret ${ORG_USERPASS} --id.type ${ID_TYPE} --csr.names "${SUBJECT}" --id.affiliation ${AFFILIATION} --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
+	fabric-ca-client register -d --id.name ${ORG_USER} --id.secret ${ORG_USERPASS} --id.type ${ID_TYPE} --csr.names "${SUBJECT}" --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
 
 	# Enroll the registered user to generate enrollment certificate
 	fabric-ca-client enroll -d -u https://${ORG_USER}:${ORG_USERPASS}@${CA} --csr.names "${SUBJECT}" --tls.certfiles ${ROOT_TLS_CERT} --home ${ORG_HOME}/chaincode/${CHAINCODE_NAME}/v${VERSION}

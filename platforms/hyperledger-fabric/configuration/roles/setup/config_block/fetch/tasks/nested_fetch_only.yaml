@@ -17,6 +17,25 @@
 - debug:
     var: existing_cli
 
+# Create the value file for org first peer
+- name: "create cli value files for {{peer.name}}-{{ org.name }} for signing the modified configuration block"
+  include_role:
+    name: k8_component
+  vars:
+    component_type_name: "{{ participantx.name }}"
+    component_type: "existing_peer_cli_job"    
+    component_name: "cli-{{ channel_name }}-{{ participantx.name }}-{{ peer.name }}"
+    peer_name: "{{ peer.name }}"
+    component_ns: "{{ participantx.name | lower}}-net"
+    vault: "{{ org.vault }}"
+    fabrictools_image: "hyperledger/fabric-tools:{{ network.version }}"
+    alpine_image: "{{ docker_url }}/alpine-utils:1.0"
+    channel_name: "{{ channel_name }}"
+    storage_class: "{{ participantx.name }}sc"
+    release_dir: "./build"
+    participant: "{{ participantx }}"
+  when: existing_cli.resources|length == 0
+
 # Creeate the value file for creater org first peer
 - name: "start cli"
   shell: |
