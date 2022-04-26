@@ -30,3 +30,4 @@
     bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries
     add_new_org: 'false'                # Default to false as this is for main network creation
     external_chaincode: false                # Default to false 
+    skip_install_checking: false        # Default to false to check chaincode installation job
