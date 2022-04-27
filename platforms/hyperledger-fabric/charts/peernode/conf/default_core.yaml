@@ -705,7 +705,11 @@ ledger:
 ###############################################################################
 operations:
     # host and port for the operations server
+    {{ if $.Values.service.ports.metrics.enabled }}
+    listenAddress: 0.0.0.0:9443
+    {{ else }}
     listenAddress: 127.0.0.1:9443
+    {{ end }}
 
     # TLS configuration for the operations endpoint
     tls:
