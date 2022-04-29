@@ -1,0 +1,149 @@
+# This playbook executes required tasks to install and instantiate external chaincode 
+# on existing Kubernetes clusters. The Kubernetes clusters should already be created and the infomation 
+# to connect to the clusters be updated in the network.yaml file that is used as an input to this playbook
+###########################################################################################
+# To Run this playbook from this directory, use the following command (network.yaml also in this directory)
+# For installing external chaincode:
+#  ansible-playbook platforms/hyperledger-fabric/configuration/install-chaincode.yaml -e "@./network.yaml" -e "external_chaincode=true" 
+# For installing internal chaincode:
+#  ansible-playbook platforms/hyperledger-fabric/configuration/install-chaincode.yaml -e "@./network.yaml" -e "external_chaincode=false" 
+############################################################################################
+# Please ensure that the ../../shared/configuration playbooks have been run using the same network.yaml
+---
+  # This will apply to ansible_provisioners. /etc/ansible/hosts should be configured with this group
+- hosts: ansible_provisioners
+  gather_facts: no
+  tasks:
+
+    ############################################################################################
+    # Check if CA server is available
+    - name: "Waiting for the CA server to be created in {{ item.name | lower }}-net"
+      include_role:
+        name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+      vars:
+        component_name: "{{ component_services.ca.name }}-tools"
+        component: "{{ item.name | lower}}"
+        component_type: "Pod"
+        component_services: "{{ item.services }}"
+        namespace: "{{ item.name | lower }}-net"
+        kubernetes: "{{ item.k8s }}"
+        label_selectors:
+          - name = {{ component_name }}
+        vault: "{{ item.vault }}"
+        ca: "{{ item.services.ca }}"
+      loop: "{{ network['organizations'] }}"
+
+    ############################################################################################
+    # Check if CA CLI is available
+    - name: "Waiting for the CA CLI to be created in {{ item.name | lower }}-net"
+      include_role:
+        name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+      vars:
+        component_name: "{{ component_services.ca.name }}-tools"
+        component: "{{ item.name | lower}}"
+        component_type: "Pod"
+        component_services: "{{ item.services }}"
+        namespace: "{{ item.name | lower }}-net"
+        kubernetes: "{{ item.k8s }}"
+        label_selectors:
+          - name = {{ component_name }}
+        vault: "{{ item.vault }}"
+        ca: "{{ item.services.ca }}"
+      loop: "{{ network['organizations'] }}"
+
+    ############################################################################################
+    # This task generates the crypto material by executing the generate-crypto-peer-chaincode.sh script 
+    - name: Generate crypto material for peer to interact with external chincode servers
+      include_role:
+        name: "create/peer-chaincode-cert"
+      vars:
+        component_name: "{{ item.name | lower}}-net"
+        component_type: "{{ item.type | lower}}"
+        org_name: "{{ item.name }}"
+        services: "{{ item.services }}"
+        subject: "{{ item.subject }}"
+        cert_subject: "{{ item.subject | regex_replace('/', ';') | regex_replace(',', '/') | regex_replace(';', ',') }}" # replace , to / and / to , for certpath
+        kubernetes: "{{ item.k8s }}"
+        vault: "{{ item.vault }}"
+        users: "{{ item.users }}"
+        setup_user_env: true
+      loop: "{{ network['organizations'] }}"
+      when: 
+        - item.type == 'peer'
+
+    ############################################################################################
+    # This task generates the crypto material by executing the generate-crypto-chaincode-server.sh script
+    - name: Generate crypto material for external chaincode servers
+      include_role:
+        name: "create/chaincode-cert"
+      vars:
+        component_name: "{{ item.name | lower}}-net"
+        component_type: "{{ item.type | lower}}"
+        org_name: "{{ item.name }}"
+        services: "{{ item.services }}"
+        subject: "{{ item.subject }}"
+        cert_subject: "{{ item.subject | regex_replace('/', ';') | regex_replace(',', '/') | regex_replace(';', ',') }}" # replace , to / and / to , for certpath
+        kubernetes: "{{ item.k8s }}"
+        vault: "{{ item.vault }}"
+        users: "{{ item.users }}"
+        setup_user_env: true
+      loop: "{{ network['organizations'] }}"
+      when: 
+        - item.type == 'peer'
+
+    ############################################################################################
+    # This task installs the external chaincode on the desired peers
+    - name: Install external chaincode
+      include_role:
+        name: "create/chaincode/install-external"
+      vars:
+        docker_url: "{{ network.docker.url }}"
+        name: "{{ item.name | lower}}"
+        namespace: "{{ item.name | lower}}-net"
+        component_type: "{{ item.type | lower}}"
+        component_peers: "{{ item.services.peers }}"
+        org_name: "{{ item.name | lower }}"
+        org_ns: "{{ item.name | lower }}-net"
+        kubernetes: "{{ item.k8s }}"
+        vault: "{{ item.vault }}"
+        peers: "{{ item.services.peers }}"
+        git_url: "{{ item.gitops.git_url }}"
+        git_branch: "{{ item.gitops.branch }}"
+        charts_dir: "{{ item.gitops.chart_source }}"
+        values_dir: "{{playbook_dir}}/../../../{{item.gitops.release_dir}}/{{ item.name | lower }}"
+      loop: "{{ network['organizations'] }}"
+      when: 
+        - item.type == 'peer'
+        - item.org_status == 'new' 
+
+    ############################################################################################
+    # This task deploys the external chaincode server for desired org
+    - name: Deploy external chaincode server
+      include_role:
+        name: "create/external_chaincode"
+      vars:
+        docker_url: "{{ network.docker.url }}"
+        name: "{{ item.name | lower}}"
+        namespace: "{{ item.name | lower}}-net"
+        component_type: "{{ item.type | lower}}"
+        component_peers: "{{ item.services.peers }}"
+        org_name: "{{ item.name | lower }}"
+        org_ns: "{{ item.name | lower }}-net"
+        kubernetes: "{{ item.k8s }}"
+        vault: "{{ item.vault }}"
+        peers: "{{ item.services.peers }}"
+        git_url: "{{ item.gitops.git_url }}"
+        git_branch: "{{ item.gitops.branch }}"
+        charts_dir: "{{ item.gitops.chart_source }}"
+        values_dir: "{{playbook_dir}}/../../../{{item.gitops.release_dir}}/{{ item.name | lower }}"
+      loop: "{{ network['organizations'] }}"
+      when: 
+        - item.type == 'peer' 
+        - item.org_status == 'new'
+
+  vars: #These variables can be overriden from the command line
+    privilege_escalate: false           #Default to NOT escalate to root privledges
+    install_os: "linux"                 #Default to linux OS
+    install_arch:  "amd64"              #Default to amd64 architecture
+    bin_install_dir:  "~/bin"            #Default to /bin install directory for binaries
+    add_new_org: 'false'                # Default to false as this is for main network creation
