@@ -37,29 +37,6 @@
           bin_directory: "{{ bin_install_dir }}"
           checksum: ""
         with_items: "{{ network.organizations }}"
-    - include_role:
-        name: setup/aws-cli
-      vars:
-        aws_cli:
-          bin_directory: "{{ bin_install_dir }}"
-        aws_access_key: "{{ item.aws.access_key }}"
-        aws_secret_key: "{{ item.aws.secret_key }}"
-      with_items: "{{ network.organizations }}"
-      when: "item.cloud_provider == 'aws' or item.cloud_provider == 'aws-baremetal'"
-    - include_role:
-        name: setup/aws-auth
-      vars:
-        aws_authenticator:
-          version: "1.10.3"
-          release_date:  "2018-07-26"
-          os: "{{ install_os }}"
-          arch: "{{ install_arch }}"
-          bin_directory: "{{ bin_install_dir }}"
-          checksum: ""
-        kubeconfig_path: "{{ item.k8s.config_file }}"
-        kubecontext: "{{ item.k8s.context }}"
-      with_items: "{{ network.organizations }}"
-      when: "item.cloud_provider == 'aws'"
     vars: #These variables can be overriden from the command line
       privilege_escalate: false           #Default to NOT escalate to root privledges
       install_os: "linux"                 #Default to linux OS
