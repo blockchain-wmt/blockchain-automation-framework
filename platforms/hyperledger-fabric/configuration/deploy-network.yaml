@@ -154,6 +154,7 @@
         profile_name: "{{ item.channel_name }}"
         fetch_certs: "false"
       loop: "{{ network['channels'] }}"
+      when: create_channel is undefined or create_channel == 'true'
 
     - name: "Create genesis block"
       include_role: 
@@ -162,6 +163,7 @@
         build_path: "./build"
         genesis: "{{ item.genesis }}"
       loop: "{{ network['channels'] }}"
+      when: create_channel is undefined or create_channel == 'true'
     
     # This role creates value file for zk-kafka (if kafka consensus is chosen) and orderer
     - name: Create all orderers
@@ -210,6 +212,7 @@
         participants: "{{ item.participants }}"
         docker_url: "{{ network.docker.url }}"
       loop: "{{ network['channels'] }}"
+      when: create_channel is undefined or create_channel == 'true'
 
     # This role creates the value file for joining channel from each participating peer
     # to the vault.
@@ -221,6 +224,7 @@
         participants: "{{ item.participants }}"
         docker_url: "{{ network.docker.url }}"
       loop: "{{ network['channels'] }}"
+      when: create_channel is undefined or create_channel == 'true'
 
     # This role creates the value file for anchor peer update over channel for
     # each organization which is the part of the channel.
@@ -232,6 +236,7 @@
         participants: "{{ item.participants }}"
         docker_url: "{{ network.docker.url }}"
       loop: "{{ network['channels'] }}"
+      when: create_channel is undefined or create_channel == 'true'
 
     # Create CLI pod for peers with cli option enabled
     - name: Create CLI pod for each peer with it enabled
