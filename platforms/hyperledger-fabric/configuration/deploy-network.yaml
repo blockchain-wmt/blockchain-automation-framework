@@ -154,7 +154,6 @@
         profile_name: "{{ item.channel_name }}"
         fetch_certs: "false"
       loop: "{{ network['channels'] }}"
-      when: create_channel is undefined or create_channel == 'true'
 
     - name: "Create genesis block"
       include_role: 
@@ -163,7 +162,6 @@
         build_path: "./build"
         genesis: "{{ item.genesis }}"
       loop: "{{ network['channels'] }}"
-      when: create_channel is undefined or create_channel == 'true'
     
     # This role creates value file for zk-kafka (if kafka consensus is chosen) and orderer
     - name: Create all orderers
