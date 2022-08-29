@@ -68,7 +68,7 @@ spec:
         - |-
           #!/usr/bin/env sh
           validateVaultResponse () {
-          if echo ${2} | grep "errors"; then
+          if echo ${2} | grep "errors" || [ "${2}" = "" ]; then
            echo "ERROR: unable to retrieve ${1}: ${2}"
            exit 1
            fi
@@ -175,7 +175,7 @@ spec:
           ## load encoded package bytes from vault
 
           validateVaultResponse () {
-          if echo ${2} | grep "errors"; then
+          if echo ${2} | grep "errors" || [ "${2}" = "" ]; then
            echo "ERROR: unable to retrieve ${1}: ${2}"
            exit 1
            fi
