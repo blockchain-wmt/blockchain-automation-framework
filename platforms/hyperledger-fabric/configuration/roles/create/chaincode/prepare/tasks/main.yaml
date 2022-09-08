@@ -1,0 +1,21 @@
+# check orderer certs
+- name: Check if orderer certificates are set correctly
+  include_tasks: check_orderer_certs.yaml
+  vars:
+    orderer_ca_path: "./build/{{ orderer.name }}-ca.crt"
+  loop: "{{ network.organizations }}"
+  loop_control:
+    loop_var: orderer
+  when: orderer.type == "orderer"
+  
+- name: Setup orderer certificates for peer org to be ready for chaincode installation
+  include_tasks: setup_peer.yaml
+  vars:
+    orderer_query: "organizations[?type=='orderer']"
+    orderer: "{{ network | json_query(orderer_query) | first }}"
+    component_name: "{{ org.name | lower}}-net"
+    component_type: "{{ org.type | lower}}"
+  loop: "{{ network.organizations }}"
+  loop_control:
+    loop_var: org
+  when: org.type == "peer"

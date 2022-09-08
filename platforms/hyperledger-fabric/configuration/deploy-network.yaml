@@ -200,6 +200,11 @@
       loop: "{{ network['organizations'] }}"
       when: item.type == 'peer'
 
+    - name: Prepare orderer ca certificates for chaincdoe installation before channel creation
+      include_role:
+        name: "create/chaincode/prepare"
+      when: create_channel is defined and create_channel == 'false'
+
     # This role creates the value file for creating channel from creator organization
     # to the vault.
     - name: Create all create-channel jobs

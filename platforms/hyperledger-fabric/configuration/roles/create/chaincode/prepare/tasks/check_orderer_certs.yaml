@@ -1,0 +1,29 @@
+#############################################################################################
+# This role fetch orderer certificates for organisations.
+#############################################################################################
+
+# Check if orderer ca certificate file exists in the host
+- name: Check if orderer ca certificate file exists in the host
+  stat:
+    path: "{{ orderer_ca_path }}"
+  register: orderer_file_result
+
+# Check if Orderer certs exists in vault
+- name: Check if orderer ca certs exist in Vault when orderer certificate file do not exist in local
+  shell: |
+    vault kv get -field=ca.{{ orderer.name }}-net-cert.pem {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ orderer.name }}-net/ca
+  environment:
+    VAULT_ADDR: "{{ orderer.vault.url }}"
+    VAULT_TOKEN: "{{ orderer.vault.root_token }}"
+  register: orderer_ca_cert_result
+  failed_when: orderer_ca_cert_result.failed == True
+  when: orderer_file_result.stat.exists == False
+
+# Download orderer ca cert to host
+- name: Download Orderer ca cert from vault to the host
+  shell: |
+    vault kv get -field=ca.{{ orderer.name }}-net-cert.pem {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ orderer.name }}-net/ca > {{ orderer_ca_path }}
+  environment:
+    VAULT_ADDR: "{{ orderer.vault.url }}"
+    VAULT_TOKEN: "{{ orderer.vault.root_token }}"
+  when: orderer_file_result.stat.exists == False

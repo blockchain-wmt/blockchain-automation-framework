@@ -1,0 +1,22 @@
+#############################################################################################
+# This role setup orderer certificates for organisations.
+#############################################################################################
+
+- name: Check if orderer ca is set in the peer vault
+  shell: |
+    vault kv get -field=ca.crt {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/orderer/tls
+  environment:
+    VAULT_ADDR: "{{ orderer.vault.url }}"
+    VAULT_TOKEN: "{{ orderer.vault.root_token }}"
+  register: peer_is_ready
+  ignore_errors: yes
+
+- name: Copy organization level certificates for orderers
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/orderer/tls ca.crt="$(cat {{ orderer_ca_path }})" 
+  vars:
+    orderer_ca_path: "./build/{{ orderer.name }}-ca.crt"
+  environment:
+    VAULT_ADDR: "{{ org.vault.url }}"
+    VAULT_TOKEN: "{{ org.vault.root_token }}"
+  when: peer_is_ready.failed == True
