@@ -2,7 +2,7 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: {{ sc_name }}
-provisioner: kubernetes.io/azure-disk
+provisioner: disk.csi.azure.com
 reclaimPolicy: Retain
 allowVolumeExpansion: true
 parameters:
