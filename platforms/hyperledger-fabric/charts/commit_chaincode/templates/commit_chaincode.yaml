@@ -9,7 +9,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | nindent 2 }}
+    {{- include "labels.custom" . | trim | nindent 4 }}
 spec:
   backoffLimit: 6
   template:
@@ -19,6 +19,7 @@ spec:
         app.kubernetes.io/name: cmtcc-{{ $.Values.channel.name }}-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ .Values.chaincode.sequence }}
         helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- include "labels.custom" . | trim | nindent 8 }}
     spec:
       restartPolicy: OnFailure
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
