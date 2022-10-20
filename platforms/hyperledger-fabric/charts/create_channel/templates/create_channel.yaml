@@ -13,7 +13,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | nindent 2 }}    
+    {{- include "labels.custom" . | trim | nindent 4 }} 
 spec:
   backoffLimit: 6
   template:
@@ -23,6 +23,7 @@ spec:
         app.kubernetes.io/name: createchannel-{{ $.Values.channel.name }}
         app.kubernetes.io/instance: {{ .Release.Name }} 
         app.kubernetes.io/managed-by: {{ .Release.Service }}
+        {{- include "labels.custom" . | trim | nindent 8 }}
     spec:
       restartPolicy: "OnFailure"
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}

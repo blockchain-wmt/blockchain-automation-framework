@@ -8,7 +8,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | nindent 2 }}
+    {{- include "labels.custom" . | trim | nindent 4 }}
 data:
   CHANNEL_NAME: {{ $.Values.channel.name }}
   FABRIC_LOGGING_SPEC: {{ $.Values.peer.loglevel }}
