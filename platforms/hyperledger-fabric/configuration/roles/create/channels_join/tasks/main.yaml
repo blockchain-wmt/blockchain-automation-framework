@@ -7,7 +7,7 @@
     org_query: "organizations[?name=='{{participant.name}}']"
     org: "{{ network | json_query(org_query) | first }}"
     component_name: "{{ org.name | lower}}-net"
-    component_type: "{{ org.type | lower}}"
+    component_type: "{{ org.type | lower}}" 
   loop: "{{ participants }}"
   loop_control:
     loop_var: participant

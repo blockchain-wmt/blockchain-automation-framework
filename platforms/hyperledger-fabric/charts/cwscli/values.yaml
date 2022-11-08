@@ -1,0 +1,28 @@
+metadata:
+  #Provide the namespace for CA deployment
+  #Eg. namespace: example-com
+  namespace: 
+  #Provide name for cws server deployment
+  #Eg. name: cwscli
+  name:
+# Provide the number of replica pods
+replicaCount: 1
+
+image:
+  #Provide the image name for the server container
+  #Eg. image: docker.prod.walmart.com/blockchain/wbp-proxy-ca
+  repository: 
+  #Provide the image tag for the server container
+  #Eg. imagetag: 0.0.1
+  tag: 
+  # Provide image pull policy
+  pullPolicy: IfNotPresent
+
+storage:
+  #Provide the storageclassname for 
+  #Eg. storageclassname: aws-storage
+  storageclassname: 
+  #Provide the storagesize for CA
+  #Eg. storagesize: 512Mi
+  storagesize: 
+

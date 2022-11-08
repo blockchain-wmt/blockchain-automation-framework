@@ -6,17 +6,39 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
-  when: vault_msp_result.failed == True and network.env.proxy != 'none'
+  when: vault_msp_result.failed == True and network.env.proxy != 'none' and  item.services.ca.tls_ca is undefined
+
+  # Copy the crypto material for orgs
+- name: Copy the crypto material for orgs when using external tls
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: vault_msp_result.failed == True and network.env.proxy != 'none' and item.services.ca.tls_ca is defined
 
 # Copy the crypto material for orgs (proxy is none)
 - name: Copy the crypto material for orgs
   shell: |
-    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.key)"
-    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-7054.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/tlscacerts/ca-{{ component_name }}-7054.pem)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/tlscacerts/ca.crt)"
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
-  when: (vault_msp_result.failed == True and network.env.proxy == 'none' ) or (refresh_cert is defined and refresh_cert == true)
+  when: (vault_msp_result.failed == True and network.env.proxy == 'none' ) or (refresh_cert is defined and refresh_cert == true) and (item.services.ca.tls_ca is undefined)
+
+  # Copy the crypto material for orgs (proxy is none)
+- name: Copy the crypto material for orgs
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/server.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/peers/{{ peer.name }}.{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: 
+   - (vault_msp_result.failed == True and network.env.proxy == 'none' ) or (refresh_cert is defined and refresh_cert == true) 
+   - item.services.ca.tls_ca is defined
 
 # This task create the directories if it is not present 
 - name: Create the peer certificate directory if it does not exist

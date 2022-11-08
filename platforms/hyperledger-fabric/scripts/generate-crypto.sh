@@ -36,8 +36,8 @@ fabric-ca-client enroll -d -u https://${CA_ADMIN_USER}:${CA_ADMIN_PASS}@${CA} --
 
 ## Get the CA cert and store in Org MSP folder
 fabric-ca-client getcacert -d -u https://${CA} --tls.certfiles ${ROOT_TLS_CERT} -M ${ORG_CYPTO_FOLDER}/msp
-mkdir ${ORG_CYPTO_FOLDER}/msp/tlscacerts
-cp ${ORG_CYPTO_FOLDER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/msp/tlscacerts
+mkdir -p ${ORG_CYPTO_FOLDER}/msp/tlscacerts
+cp ${ORG_CYPTO_FOLDER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/msp/tlscacerts/
 
 ## Register and enroll admin for Org and populate admincerts for MSP
 if [ "$1" = "peer" ]; then
@@ -139,7 +139,7 @@ while [ ${COUNTER} -lt ${NO_OF_PEERS} ] && [ "$1" != "peer" ]; do
 
 	# Create the TLS CA directories of the MSP folder if they don't exist.
 	mkdir ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/tlscacerts
-	cp ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/tlscacerts
+	cp ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/tlscacerts/
 
 	# Copy the peer org's admin cert into target MSP directory
 	mkdir -p ${ORG_CYPTO_FOLDER}/${TYPE_FOLDER}/${PEER}/msp/admincerts

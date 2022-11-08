@@ -19,3 +19,4 @@ helm_templates:
   approve_chaincode_job: approve_chaincode_job.tpl
   external_chaincode: external_chaincode.tpl
   install_external_chaincode_job: install_external_chaincode_job.tpl
+  cwscli: cwscli.tpl

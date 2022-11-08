@@ -1,0 +1,32 @@
+---
+# tasks file for cws cli
+#############################################################################################
+# This role creates value file for the deployment of CA Tools CLI
+#############################################################################################
+
+
+############################################################################################
+# This task creates the CWS CLI value files
+- name: "Create CWS cli Values"
+  include_role:
+    name: helm_component
+  vars:
+    name: "cwscli"
+    type: "cwscli"
+    git_url: "{{ gitops.git_url }}"
+    git_branch: "{{ gitops.branch }}"
+    charts_dir: "{{ gitops.chart_source }}"
+
+# Git Push : Pushes the above generated files to git directory 
+- name: Git Push
+  include_role: 
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/git_push"
+  vars:
+    GIT_DIR: "{{ playbook_dir }}/../../../"
+    GIT_REPO: "{{ item.gitops.git_repo }}"
+    GIT_USERNAME: "{{ item.gitops.username }}"
+    GIT_EMAIL: "{{ item.gitops.email }}"
+    GIT_PASSWORD: "{{ item.gitops.password }}"
+    GIT_BRANCH: "{{ item.gitops.branch }}"
+    GIT_RESET_PATH: "platforms/hyperledger-fabric/configuration"
+    msg: "[ci skip] Pushing CWS CLI files"

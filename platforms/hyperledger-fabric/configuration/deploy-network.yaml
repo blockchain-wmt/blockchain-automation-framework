@@ -86,6 +86,23 @@
         values_dir: "{{playbook_dir}}/../../../{{item.gitops.release_dir}}/{{ item.name | lower }}"
       loop: "{{ network['organizations'] }}"
 
+    # TODO Create CWS CLI helm-value files and check-in
+    - name: Create CWS cli for each organization
+      include_role:
+        name: "create/cwscli"
+      vars:
+        component_name: "{{ item.name | lower}}-net"
+        component: "{{ item.name | lower}}"
+        component_type: "{{ item.type | lower}}"
+        component_services: "{{ item.services }}"
+        kubernetes: "{{ item.k8s }}"
+        vault: "{{ item.vault }}"
+        ca: "{{ item.services.ca }}"
+        gitops: "{{ item.gitops }}"
+        values_dir: "{{playbook_dir}}/../../../{{item.gitops.release_dir}}/{{ item.name | lower }}"
+      loop: "{{ network['organizations'] }}"
+      when: ( item.services.ca.tls_ca is defined ) and ( item.services.ca.tls_ca.type == 'cws' )
+
     # Create generate_crypto script for each organization
     - name: Create generate_crypto.sh for each organization
       include_role:

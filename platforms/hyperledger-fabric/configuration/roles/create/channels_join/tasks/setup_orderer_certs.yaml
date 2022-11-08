@@ -48,6 +48,8 @@
   tags:
     - molecule-idempotence-notest
 
+
+     
 # Copy the ca.crt when add_new_org is false 
 - name: Copy tls ca.crt from auto-generated path to given path
   copy:
@@ -58,7 +60,25 @@
   loop: "{{ network.orderers }}"
   loop_control:
     loop_var: orderer
-  when: add_new_org == 'false' and add_peer is not defined
+  when: 
+  - add_new_org == 'false' and add_peer is not defined 
+  - org.services.ca.tls_ca is undefined
+  tags:
+    - notest
+
+# Copy the ca.crt when add_new_org is false 
+- name: Copy tls ca.crt from auto-generated path to given path when external tls is used
+  copy:
+    src: "./build/crypto-config/tls/ordererOrganizations/{{ orderer.org_name|lower }}-net/orderers/{{orderer.name}}.{{ orderer.org_name|lower }}-net/tls/ca.crt"
+    dest: "{{ orderer.certificate }}"
+    follow: no
+    force: yes
+  loop: "{{ network.orderers }}"
+  loop_control:
+    loop_var: orderer
+  when: 
+  - add_new_org == 'false' and add_peer is not defined
+  - org.services.ca.tls_ca is defined
   tags:
     - notest
 

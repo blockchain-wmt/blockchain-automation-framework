@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.metadata.name }}
+  namespace: {{ .Values.metadata.namespace }}
+  labels:
+    app: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Values.metadata.name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  serviceName: {{ .Values.metadata.name }}
+  updateStrategy:
+    type: RollingUpdate
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      name: {{ .Values.metadata.name }}
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.metadata.name }}
+    spec:
+      containers:
+        - name: {{ .Values.metadata.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sleep", "infinity"]
+          stdin: true
+          tty: true
+          volumeMounts:
+          - mountPath: /root/cwscli
+            name: cwscli-pv
+          - mountPath: /crypto-config
+            name: cwscli-crypto-pv
+      volumes:
+        - name: cwscli-crypto-pv
+          emptyDir: {}
+        - name: cwscli-pv
+          emptyDir: {}

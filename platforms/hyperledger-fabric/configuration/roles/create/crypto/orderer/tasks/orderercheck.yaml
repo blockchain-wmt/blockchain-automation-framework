@@ -11,6 +11,20 @@
   tags:
     - notest
 
+# Check if cws-ca-cli pod is running
+- name: "Waiting for CWS CLI in {{ item.name | lower }}-net"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Pod"
+    namespace: "{{ item.name | lower }}-net"
+    component_name: "cwscli"
+    label_selectors:
+      - name = {{ component_name }}
+  tags:
+    - notest
+  when: item.services.ca.tls_ca is defined and item.services.ca.tls_ca.type =='cws'
+
 # Ensure ca directory is present in build
 - include_role:
     name: "{{ playbook_dir }}/../../shared/configuration/roles/check/setup"

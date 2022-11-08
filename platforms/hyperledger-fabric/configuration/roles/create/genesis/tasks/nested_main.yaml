@@ -1,0 +1,28 @@
+- name: Finding tlscacert in {{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/msp/tlscacerts
+  find:
+    path: "{{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/msp/tlscacerts"
+  register: cleanup
+  ignore_errors: true
+
+- name: Removing tlscacert in {{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/msp/tlscacerts dir
+  file:
+     path: "{{ item.path }}"
+     state: absent
+  with_items: "{{ cleanup.files }}"
+  ignore_errors: true
+
+- name:  Copy orderer tlscacerts when using external tls
+  shell:
+   cp "{{build_path}}/crypto-config/tls/ordererOrganizations/{{org.name | lower}}-net/users/Admin@{{org.name | lower}}-net/tls/ca.crt" "{{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/msp/tlscacerts/"
+  when: org.services.ca.tls_ca is defined
+
+- name: Copy orderer tls certs when using external tls
+  shell: | 
+   mkdir -p "{{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/orderers/{{orderer.name}}.{{org.name | lower}}-net/tls"
+   cp "{{build_path}}/crypto-config/tls/ordererOrganizations/{{org.name | lower}}-net/orderers/{{orderer.name}}.{{org.name | lower}}-net/tls/server.crt" "{{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/orderers/{{orderer.name}}.{{org.name | lower}}-net/tls/server.crt"
+   cp "{{build_path}}/crypto-config/tls/ordererOrganizations/{{org.name | lower}}-net/orderers/{{orderer.name}}.{{org.name | lower}}-net/tls/server.key" "{{build_path}}/crypto-config/ordererOrganizations/{{org.name | lower}}-net/orderers/{{orderer.name}}.{{org.name | lower}}-net/tls/server.key"
+  loop: "{{ org.services.orderers }}"
+  loop_control:
+    loop_var: orderer
+  when: org.services.ca.tls_ca is defined
+
