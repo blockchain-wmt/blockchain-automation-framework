@@ -65,7 +65,7 @@ while [ ${CUR_USER} -lt ${TOTAL_USERS} ]; do
 	USER="Admin"
 	ORG_USER="${USER}@${ALTERNATIVE_ORG_NAMES}"
 	ORG_USERPASS="${USER}@${FULLY_QUALIFIED_ORG_NAME}-PW-123"
-        PASSWORD=$ORG_USERPASS
+	PASSWORD=$ORG_USERPASS
 
 	OUTPUT_PATH=${ORG_HOME}/client${USER}/tls
 	mkdir -p $OUTPUT_PATH
@@ -86,7 +86,7 @@ while [ ${CUR_USER} -lt ${TOTAL_USERS} ]; do
 	# Copy the TLS key and cert to the appropriate place
 	mv $OUTPUT_PATH/cert1.crt $OUTPUT_PATH/client.crt
 	mv $OUTPUT_PATH/cert2.crt $OUTPUT_PATH/ca.crt
-        mkdir -p ${ORG_CYPTO_FOLDER}/users/${USER}@${component_ns}/tls
+	mkdir -p ${ORG_CYPTO_FOLDER}/users/${USER}@${component_ns}/tls
 	cp ${ORG_HOME}/client${USER}/tls/* ${ORG_CYPTO_FOLDER}/users/${USER}@${component_ns}/tls
 
 	CUR_USER=$((CUR_USER + 1))
