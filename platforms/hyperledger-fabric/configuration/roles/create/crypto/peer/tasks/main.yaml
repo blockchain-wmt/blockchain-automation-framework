@@ -16,6 +16,21 @@
   tags:
     - notest
 
+# Check if cwscli pod is running
+- name: "Waiting for cwscli in {{ item.name | lower }}-net"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Pod"
+    namespace: "{{ item.name | lower }}-net"
+    component_name: "cwscli"
+    check: "name"
+    label_selectors:
+      - name = {{ component_name }}
+  tags:
+    - notest
+  when: ( item.services.ca.tls_ca is defined ) and ( item.services.ca.tls_ca.type == 'cws' )
+
 # Ensure ca directory is present in build
 - name: Ensure ca directory exists
   file:
@@ -40,6 +55,15 @@
   vars:
     path: "./build/crypto-config/peerOrganizations/{{ component_name }}/ca"
     check: "ensure_dir"
+
+# This task creates the folder to store tls crypto material
+- name: "creating the directory ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/ca"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/setup"
+  vars:
+    path: "./build/crypto-config/tls/peerOrganizations/{{ component_name }}/ca"
+    check: "ensure_dir"
+  when: item.services.ca.tls_ca is defined
 
 - name: Get ca certs and key
   shell: |
@@ -178,6 +202,21 @@
   when:
     - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true) or vault_admin_result.stdout == ''
     - network.env.proxy == 'none'
+    - item.services.ca.tls_ca is undefined
+  tags:
+    - molecule-idempotence-notest
+
+- name: Copy organization level certificates for orgs when external tls is used
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/users/admin/tls ca.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/ca.crt)" client.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/client.crt)" client.key="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/client.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/users/admin/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/cacerts/ca-{{ component_name }}-7054.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when:
+    - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true) or vault_admin_result.stdout == ''
+    - network.env.proxy == 'none'
+    - item.services.ca.tls_ca is defined
   tags:
     - molecule-idempotence-notest
 
@@ -191,6 +230,21 @@
   when:
     - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true) or vault_admin_result.stdout == ''
     - network.env.proxy != 'none'
+    - item.services.ca.tls_ca is undefined
+  tags:
+    - molecule-idempotence-notest
+
+- name: Copy organization level certificates for orgs when external tls is used
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/users/admin/tls ca.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/ca.crt)" client.crt="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/client.crt)" client.key="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/client.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_name }}/users/admin/msp admincerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/peerOrganizations/{{ component_name }}/users/Admin@{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when:
+    - vault_admin_result.failed == True or (refresh_cert is defined and refresh_cert == true) or vault_admin_result.stdout == ''
+    - network.env.proxy != 'none'
+    - item.services.ca.tls_ca is defined
   tags:
     - molecule-idempotence-notest
 

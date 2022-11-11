@@ -54,22 +54,20 @@ while [ ${CUR_USER} -lt ${TOTAL_USERS} ]; do
 	# Checking if the user msp folder exists in the CA server	
 	if [ ! -d "${ORG_HOME}/client${USER}" ]; then # if user certificates do not exist
 
-		## Register and enroll User for Org
-		if [ "$1" = "peer" ]; then
-			fabric-ca-client register -d --id.name ${ORG_USER} --id.secret ${ORG_USERPASS} --id.type user --csr.names "${SUBJECT}" --id.affiliation ${AFFILIATION} --id.attrs "${ATTRS}" --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
-		else
-			fabric-ca-client register -d --id.name ${ORG_USER} --id.secret ${ORG_USERPASS} --id.type user --csr.names "${SUBJECT}" --id.attrs "${ATTRS}" --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
-		fi
-
-		# Enroll the registered user to generate enrollment certificate
-		fabric-ca-client enroll -d -u https://${ORG_USER}:${ORG_USERPASS}@${CA} --csr.names "${SUBJECT}" --tls.certfiles ${ROOT_TLS_CERT} --home ${ORG_HOME}/client${USER}
-
 		mkdir ${ORG_HOME}/client${USER}/msp/admincerts
 		cp ${ORG_HOME}/client${USER}/msp/signcerts/* ${ORG_HOME}/client${USER}/msp/admincerts/${ORG_USER}-cert.pem
 
 		mkdir -p ${ORG_CYPTO_FOLDER}/users/${ORG_USER}
 		cp -R ${ORG_HOME}/client${USER}/msp ${ORG_CYPTO_FOLDER}/users/${ORG_USER}
 
+		# Get TLS cert for user and copy to appropriate location
+		fabric-ca-client enroll -d --enrollment.profile tls -u https://${ORG_USER}:${ORG_USERPASS}@${CA} -M ${ORG_HOME}/client${USER}/tls --tls.certfiles ${ROOT_TLS_CERT}
+
+		# Copy the TLS key and cert to the appropriate place
+		mkdir -p ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls
+		cp ${ORG_HOME}/client${USER}/tls/keystore/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/client.key
+		cp ${ORG_HOME}/client${USER}/tls/signcerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/client.crt
+		cp ${ORG_HOME}/client${USER}/tls/tlscacerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/ca.crt
 	
 	else # If User certificate exists
 		
@@ -125,15 +123,17 @@ while [ ${CUR_USER} -lt ${TOTAL_USERS} ]; do
 				CUR_CERT_ATTRS=$((CUR_CERT_ATTRS + 1))
 			done
 			
-			# Updating the identity with current attrs
-			fabric-ca-client identity modify ${ORG_USER} -d --type user --affiliation ${AFFILIATION} --attrs "${ATTRS}" --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
-
-			# Generate a new enrollment certificate
-			fabric-ca-client enroll -d -u https://${ORG_USER}:${ORG_USERPASS}@${CA} --csr.names "${SUBJECT}" --tls.certfiles ${ROOT_TLS_CERT} --home ${ORG_HOME}/client${USER}
 			
 			cp ${ORG_HOME}/client${USER}/msp/signcerts/* ${ORG_HOME}/client${USER}/msp/admincerts/${ORG_USER}-cert.pem
 			cp -R ${ORG_HOME}/client${USER}/msp ${ORG_CYPTO_FOLDER}/users/${ORG_USER}
 
+			# Get TLS cert for user and copy to appropriate location
+			fabric-ca-client enroll -d --enrollment.profile tls -u https://${ORG_USER}:${ORG_USERPASS}@${CA} -M ${ORG_HOME}/client${USER}/tls --tls.certfiles ${ROOT_TLS_CERT}
+
+			# Copy the TLS key and cert to the appropriate place
+			cp ${ORG_HOME}/client${USER}/tls/keystore/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/client.key
+			cp ${ORG_HOME}/client${USER}/tls/signcerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/client.crt
+			cp ${ORG_HOME}/client${USER}/tls/tlscacerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_USER}/tls/ca.crt
 		fi
 	fi
 

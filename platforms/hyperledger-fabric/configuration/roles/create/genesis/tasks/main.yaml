@@ -3,7 +3,16 @@
   file:
     path: "{{ build_path }}/channel-artifacts/genesis.block"
     state: absent
-
+   
+- name: Copy orderer tls certs when using external tls   
+  include_tasks: nested_main.yaml
+  vars: 
+    org: org
+  loop: "{{ network['organizations'] }}"
+  loop_control:
+    loop_var: org 
+  when:  org.type == "orderer" and org.services.ca.tls_ca is defined
+  
 # This task creates the genesis block by consuming the configtx.yaml file
 - name: "Create genesis block"
   shell: |

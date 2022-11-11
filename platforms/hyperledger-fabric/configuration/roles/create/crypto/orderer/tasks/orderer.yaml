@@ -22,7 +22,6 @@
   tags:
     - notest
 
-
 - name: Check if orderer tls already created
   shell: |
     vault kv get -field=ca.crt {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls
@@ -65,6 +64,21 @@
     - notest
 
 ############################################################################################
+# This task creates directory path on CWS CLI
+- name: Create directory path on CWS CLI
+  shell: |
+    export CWS_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get pods -n {{ component_name }} | grep "cwscli" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }}  ${CWS_CLI} -- mkdir -p /root/cwscli/crypto-config/{{ component_type }}Organizations/{{ component_name }}/ca
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }}  ${CWS_CLI} -- mkdir -p /root/cwscli/{{org_name|lower}}
+  when: 
+   - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+   - item.services.ca.tls_ca is defined
+   - item.services.ca.tls_ca.type == 'cws'
+  changed_when: false
+  tags:
+    - notest
+
+############################################################################################
 # Copy generate-crypto script from scrips directory
 - name: Copy generate-crypto.sh to destination directory
   copy:
@@ -74,6 +88,8 @@
     remote_src: yes
   with_items:
     - generate-user-crypto.sh
+    - generate-user-crypto-tls.sh
+    - generate-user-crypto-fabric-ca-tls.sh
   loop_control:
     loop_var: files
   when: vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
@@ -87,7 +103,11 @@
     mode: '0775'
   with_items:
     - "generate-crypto-{{ org_name|lower }}-{{ orderer.name }}.sh"
+    - "generate-crypto-{{ org_name|lower }}-{{ orderer.name }}-tls.sh"
+    - "generate-crypto-{{ org_name|lower }}-tls.sh"
     - generate-user-crypto.sh
+    - generate-user-crypto-tls.sh
+    - generate-user-crypto-fabric-ca-tls.sh
   loop_control:
     loop_var: files
   when: vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
@@ -107,6 +127,34 @@
     - notest
 
 ############################################################################################
+# This task copy the generate_crypto.sh and cert files in the respective CA Tools CLI
+- name: Copy the tls generate_crypto.sh file into the CA Tools 
+  shell: |
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-{{ org_name|lower }}-tls.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-crypto-{{ org_name|lower }}-tls.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-{{ org_name|lower }}-{{ orderer.name }}-tls.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-crypto-tls.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-user-crypto-fabric-ca-tls.sh {{ component_name }}/${CA_TOOL_CLI}:/root/ca-tools/{{org_name|lower}}/generate-user-crypto-tls.sh
+  when: 
+  - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+  - item.services.ca.tls_ca is undefined
+  tags:
+    - notest
+
+############################################################################################
+# This task copy the generate_crypto.sh and cert files in the respective CWS CLI for tls
+- name: Copy the generate_crypto.sh file into the CWS CLI
+  shell: |
+    export CWS_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "cwscli" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-crypto-{{ org_name|lower }}-{{ orderer.name }}-tls.sh {{ component_name }}/${CWS_CLI}:/root/cwscli/{{org_name|lower}}/generate-crypto.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp ./build/generate-user-crypto-tls.sh {{ component_name }}/${CWS_CLI}:/root/cwscli/{{org_name|lower}}/generate-user-crypto-tls.sh
+  when: 
+   - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+   - item.services.ca.tls_ca is defined
+   - item.services.ca.tls_ca.type == 'cws'
+  tags:
+    - notest
+
+############################################################################################
 # This task generates the crypto material by executing the generate_crypto.sh script file
 # present in the Organizations CA Tools CLI
 - name: Generate crypto material for organization orderers
@@ -115,6 +163,36 @@
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto.sh
     KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-user-crypto.sh {{ orderer.name }} {{component_name}} {{org_name|lower}} 1 {{org_name}} "{{subject}}" "{{ca_url}}"
   when: vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+  tags:
+    - notest
+
+############################################################################################
+# This task generates the tls crypto material by executing the generate_crypto.sh script file
+# present in the Organizations CA Tools CLI
+- name: Generate tls certs crypto material for organization orderers
+  shell: |
+    export CA_TOOL_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "ca-tools" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto-{{ org_name|lower }}-tls.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-crypto-tls.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CA_TOOL_CLI} -- /root/ca-tools/{{org_name|lower}}/./generate-user-crypto-tls.sh {{ orderer.name }} {{component_name}} {{org_name|lower}} 1 {{org_name}} "{{subject}}" "{{ca_url}}"
+  when: 
+   - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+   - item.services.ca.tls_ca is undefined
+  tags:
+    - notest
+
+############################################################################################
+# This task generates the crypto material by executing the generate_crypto.sh script file
+# present in the Organizations CWS CLI
+- name: Generate tls certs for organization orderers
+  shell: |
+    export CWS_CLI=$(KUBECONFIG={{ kubernetes.config_file }} kubectl get po -n {{ component_name }} | grep "cwscli" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CWS_CLI} -- /root/cwscli/{{org_name|lower}}/./generate-crypto.sh
+    KUBECONFIG={{ kubernetes.config_file }} kubectl exec -n {{ component_name }} ${CWS_CLI} -- /root/cwscli/{{org_name|lower}}/./generate-user-crypto-tls.sh {{ orderer.name }} {{component_name}} {{org_name|lower}} 1 {{org_name}} "{{item.services.ca.tls_ca.type}}" "{{item.services.ca.tls_ca.url}}" "{{item.external_url_suffix}}"
+  when: 
+   - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+   - item.services.ca.tls_ca is defined
+   - item.services.ca.tls_ca.type == 'cws'
   tags:
     - notest
 
@@ -130,6 +208,21 @@
     - notest
 
 ############################################################################################
+# This task copies the generated crypto material from the respective CWS CLI
+# to the Ansible container
+- name: Copy the tls folder from the cws cli
+  shell: |
+    export CWS_CLI=$(KUBECONFIG={{ kubernetes.config_file }}  kubectl get po -n {{ component_name }} | grep "cwscli" | awk '{print $1}')
+    KUBECONFIG={{ kubernetes.config_file }} kubectl cp {{ component_name }}/${CWS_CLI}:/crypto-config ./build/crypto-config/tls
+  when: 
+   - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+   - item.services.ca.tls_ca is defined
+   - item.services.ca.tls_ca.type == 'cws'
+
+  tags:
+    - notest
+
+############################################################################################
 # These roles put the above created crypto material in the vault
 - name: Copy the crypto material for orderer
   shell: |
@@ -141,6 +234,7 @@
   when: 
     - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
     - network.env.proxy != 'none'
+    - item.services.ca.tls_ca is undefined
   changed_when: false
   tags:
   - notest
@@ -157,6 +251,41 @@
   when: 
     - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
     - network.env.proxy == 'none'
+    - item.services.ca.tls_ca is undefined
+  changed_when: false
+  tags:
+  - notest  
+
+############################################################################################
+# These roles put the above created crypto material in the vault when external tls is defined
+- name: Copy the crypto material for orderer when external tls is defined
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/server.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: 
+    - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+    - network.env.proxy != 'none'
+    - item.services.ca.tls_ca is defined
+  changed_when: false
+  tags:
+  - notest
+
+  ############################################################################################
+# These roles put the above created crypto material in the vault (proxy != none) when external tls is defined
+- name: Copy the crypto material for orderer when external tls is defined
+  shell: |
+    vault write {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls ca.crt="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/ca.crt)" server.crt="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/server.crt)" server.key="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/server.key)"
+    vault write {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp admincerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/admincerts/Admin@{{ component_name }}-cert.pem)" cacerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/cacerts/ca-{{ component_name }}-{{ item.external_url_suffix }}-8443.pem)" keystore="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/keystore/*_sk)" signcerts="$(cat ./build/crypto-config/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/msp/signcerts/cert.pem)" tlscacerts="$(cat ./build/crypto-config/tls/ordererOrganizations/{{ component_name }}/orderers/{{orderer.name}}.{{ component_name }}/tls/ca.crt)"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: 
+    - vault_msp_result.failed == True or (refresh_cert is defined and refresh_cert == true)
+    - network.env.proxy == 'none'
+    - item.services.ca.tls_ca is defined
   changed_when: false
   tags:
   - notest  

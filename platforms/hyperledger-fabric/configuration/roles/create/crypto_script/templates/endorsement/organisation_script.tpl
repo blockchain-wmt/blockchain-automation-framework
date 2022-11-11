@@ -61,15 +61,6 @@ if [ "{{ proxy }}" != "none" ]; then
 	mv ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/msp/cacerts/*.pem ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/msp/cacerts/ca-${FULLY_QUALIFIED_ORG_NAME}-${EXTERNAL_URL_SUFFIX}-8443.pem
 fi
 
-# Get TLS cert for admin and copy to appropriate location
-fabric-ca-client enroll -d --enrollment.profile tls -u https://${ORG_ADMIN_USER}:${ORG_ADMIN_PASS}@${CA} -M ${ORG_HOME}/admin/tls --tls.certfiles ${ROOT_TLS_CERT} --csr.names "${SUBJECT_PEER}"
-
-# Copy the TLS key and cert to the appropriate place
-mkdir -p ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/tls
-cp ${ORG_HOME}/admin/tls/keystore/* ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/tls/client.key
-cp ${ORG_HOME}/admin/tls/signcerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/tls/client.crt
-cp ${ORG_HOME}/admin/tls/tlscacerts/* ${ORG_CYPTO_FOLDER}/users/${ORG_ADMIN_USER}/tls/ca.crt
-
 ## Register and enroll peers and populate their MSP folder
 COUNTER=0
 while [  ${COUNTER} -lt ${NO_OF_PEERS} ]; do
@@ -84,20 +75,6 @@ while [  ${COUNTER} -lt ${NO_OF_PEERS} ]; do
 	# Register the peer
 	fabric-ca-client register -d --id.name ${PEER} --id.secret ${PEER}-pw --id.type peer --tls.certfiles ${ROOT_TLS_CERT} --home ${CAS_FOLDER}
 
-	# Enroll to get peers TLS cert
-	fabric-ca-client enroll -d --enrollment.profile tls -u https://${PEER}:${PEER}-pw@${CA} -M ${ORG_HOME}/cas/peers/tls --csr.hosts "${CSR_HOSTS}" --tls.certfiles ${ROOT_TLS_CERT}  --csr.names "${SUBJECT_PEER}"
-
-	# Copy the TLS key and cert to the appropriate place
-	mkdir -p ${ORG_CYPTO_FOLDER}/peers/${PEER}/tls
-	
-	cp ${ORG_HOME}/cas/peers/tls/keystore/* ${ORG_CYPTO_FOLDER}/peers/${PEER}/tls/server.key
-	cp ${ORG_HOME}/cas/peers/tls/signcerts/* ${ORG_CYPTO_FOLDER}/peers/${PEER}/tls/server.crt
-	cp ${ORG_HOME}/cas/peers/tls/tlscacerts/* ${ORG_CYPTO_FOLDER}/peers/${PEER}/tls/ca.crt
-	
-	rm -rf ${ORG_HOME}/cas/peers/tls
-	rm -rf ${ORG_HOME}/cas/admin/tls
-	rm -rf ${ORG_HOME}/cas/admin/msp
-
 	rm -rf ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp
 	
 	# Enroll again to get the peer's enrollment certificate (default profile)
@@ -111,7 +88,7 @@ while [  ${COUNTER} -lt ${NO_OF_PEERS} ]; do
 	if [ "{{ proxy }}" != "none" ]; then
 		mv ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/cacerts/*.pem ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/cacerts/ca-${FULLY_QUALIFIED_ORG_NAME}-${EXTERNAL_URL_SUFFIX}-8443.pem
 	fi
-	cp ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/tlscacerts
+	cp ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/cacerts/* ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/tlscacerts/
 	cp ${ORG_CYPTO_FOLDER}/msp/admincerts/${ORG_ADMIN_USER}-cert.pem ${ORG_CYPTO_FOLDER}/peers/${PEER}/msp/admincerts
 	
 	let COUNTER=COUNTER+1
