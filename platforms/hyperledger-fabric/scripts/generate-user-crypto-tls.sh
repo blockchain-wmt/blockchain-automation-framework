@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 if [ $# -lt 8 ]; then
 	echo "Usage : . $0 orderer|peer <namespace> <nodename> <user-identities> <affiliation> <subject> <ca-server-url>"
 	exit

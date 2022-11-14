@@ -44,3 +44,4 @@ charts:
   node: node
   external_chaincode: external-chaincode
   install_external_chaincode_job: install_external_chaincode
+  cwscli: cwscli
