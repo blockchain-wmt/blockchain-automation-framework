@@ -8,7 +8,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | trim | nindent 4 }}
+    {{- include "labels.custom" . | nindent 2 }}
 data:
   FABRIC_LOGGING_SPEC: grpc=debug:{{ $.Values.peer.loglevel }}
   GODEBUG: "netdns=go"
@@ -49,7 +49,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | trim | nindent 4 }}
+    {{- include "labels.custom" . | nindent 2 }}
 data:
   mspconfig: |
     {{if  ($.Values.peer.mspconfig.organizationalunitidentifiers) }}
@@ -82,7 +82,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | trim | nindent 4 }}
+    {{- include "labels.custom" . | nindent 2 }}
 data:
   {{ if and (eq $.Values.peer.core_yaml.initialize_from "file") (eq $.Values.peer.core_yaml.tpl true) }}
   core.yaml: |
