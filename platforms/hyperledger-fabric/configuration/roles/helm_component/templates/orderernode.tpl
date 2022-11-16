@@ -17,7 +17,12 @@ spec:
       images:
         orderer: {{ orderer_image }}
         alpineutils: {{ alpine_image }}
-
+{% if network.env.labels is defined %}
+      labels:  
+{% for key in network.env.labels.keys() %}
+         {{ key }}: {{ network.env.labels[key] | quote }}
+{% endfor %}
+{% endif %}
     orderer:
       name: {{ orderer.name }}
       loglevel: info

@@ -17,6 +17,12 @@ spec:
       images:
         alpineutils: {{ alpine_image }}
         ca: {{ ca_image }}
+{% if network.env.labels is defined %}
+      labels:  
+{% for key in network.env.labels.keys() %}
+         {{ key }}: {{ network.env.labels[key] | quote }}
+{% endfor %}
+{% endif %}
     server:
       name: {{ component_services.ca.name }}
       tlsstatus: true
