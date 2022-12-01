@@ -19,7 +19,12 @@ spec:
       images:
         external_chaincode: {{ chaincode_image }}
         alpineutils: {{ alpine_image }}
-
+{% if network.env.labels is defined %}
+      labels:  
+{% for key in network.env.labels.keys() %}
+         {{ key }}: {{ network.env.labels[key] | quote }}
+{% endfor %}
+{% endif %}
     chaincode:
       org: {{ org_name }}
       name: {{ peer.chaincode.name }}

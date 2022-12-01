@@ -8,7 +8,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | trim | nindent 4 }}
+    {{- include "labels.custom" . | nindent 2 }}
 data:
   fabric-ca-server-config.yaml: |
     {{ (tpl (.Files.Get ( printf "%s" $.Values.server.configpath )) . ) | nindent 6 }}
