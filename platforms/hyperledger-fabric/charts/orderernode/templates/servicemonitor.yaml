@@ -1,0 +1,26 @@
+{{- if $.Values.service.ports.metrics.enabled }}
+{{- if $.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: {{ $.Values.orderer.name }}
+    walmart.com/prometheus: infrastructure
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }} 
+  name: {{ $.Values.orderer.name }}
+  namespace:  {{ $.Values.metadata.namespace }}
+spec:
+  jobLabel: {{ .Release.Name }}
+  endpoints:
+    - honorLabels: true
+      port: metrics
+  namespaceSelector:
+    matchNames:
+      -  {{ $.Values.metadata.namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }} 
+      run: {{ $.Values.orderer.name }}
+{{- end }} 
+{{- end }} 
