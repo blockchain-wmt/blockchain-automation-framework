@@ -49,3 +49,7 @@ spec:
 {% endif %}
     service:
       servicetype: ClusterIP
+
+    metrics: 
+       enabled: {{ peer.chaincode.metrics.enabled | default(false) }}
+       port: {{ peer.chaincode.metrics.port | default(8080)}}

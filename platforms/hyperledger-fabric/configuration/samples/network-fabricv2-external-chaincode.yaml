@@ -283,6 +283,9 @@ network:
             buildpack_path: build/buildpack  # The main directory where chaincode is needed to be placed
             image: <username>/<image_name>:<version>
             crypto_mount_path: /crypto  # OPTIONAL | tls: true | Path where crypto shall be mounted for the chaincode server
+            metrics:
+               enabled: true    # enable/disable chaincode metrics
+               port: 8080       # port on which metrics server is running inside the chaincode (metrics path must be /metrics)
     
     - organization:
       name: carrier

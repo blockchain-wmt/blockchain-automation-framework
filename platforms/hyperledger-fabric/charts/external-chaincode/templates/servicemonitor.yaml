@@ -1,0 +1,24 @@
+
+{{- if .Values.metrics.enabled }}
+{{- if $.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    run: chaincode-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.org }}
+    walmart.com/prometheus: infrastructure
+  name: chaincode-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.org }}
+  namespace: {{ $.Values.metadata.namespace }}
+spec:
+  jobLabel: {{ $.Release.Name }}
+  endpoints:
+    - honorLabels: true
+      port: metrics
+  namespaceSelector:
+     matchNames:
+      - {{ $.Values.metadata.namespace }} 
+  selector:
+    matchLabels:
+      run: chaincode-{{ $.Values.chaincode.name }}-{{ $.Values.chaincode.version }}-{{ $.Values.chaincode.org }}
+{{- end }}
+{{- end }}
