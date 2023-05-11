@@ -7,6 +7,15 @@
 ############################################################################################
 # Please ensure that the ../../shared/configuration playbooks have been run using the same network.yaml
 ---
+- hosts: all
+  gather_facts: no
+  no_log: True
+- import_playbook: "{{ playbook_dir }}/../../shared/configuration/environment-setup.yaml"   # First setup environment for each organization
+- import_playbook: "{{ playbook_dir }}/../../shared/configuration/kubernetes-env-setup.yaml" # Then deploy Flux for each organization
+  when: reset is undefined or reset == 'false'  # Deploy flux only when reset is not needed
+- import_playbook: "{{ playbook_dir }}/../../shared/configuration/cluster-env-setup.yaml" # Then deploy HAproxy for cluster
+  when: reset is undefined or reset == 'false'
+  
   # This will apply to ansible_provisioners. /etc/ansible/hosts should be configured with this group
 - hosts: ansible_provisioners
   gather_facts: no
