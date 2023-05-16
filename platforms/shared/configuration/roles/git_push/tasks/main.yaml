@@ -14,6 +14,7 @@
     echo "---------------GIT PUSH---------------"
     git config user.email {{ GIT_EMAIL }}
     git config user.name {{ GIT_USERNAME }}
+    GIT_MERGE_AUTOEDIT=no git --git-dir={{ GIT_DIR }}/.git pull https://{{ GIT_USERNAME }}:{{ GIT_PASSWORD }}@{{ GIT_REPO }}  {{ GIT_BRANCH }} --allow-unrelated-histories
     git --git-dir={{ GIT_DIR }}/.git add -A .
     
     # To ignore a directory add it add reset path
